@@ -83,13 +83,13 @@
     
     # SQL Server settings
     DB_USER=sa
-    DB_PASSWORD=Aa@123456
+    DB_PASSWORD=@Bina0608
     DB_HOST=127.0.0.1
     DB_PORT=1433
-    DB_NAME=FlaskApiDB
+    DB_NAME=QLBH
     
     
-    DATABASE_URI = "mssql+pymssql://sa:Aa%40123456@127.0.0.1:1433/FlaskApiDB"
+    DATABASE_URI = "mssql+pymssql://sa:Aa%40123456@127.0.0.1:1433/QLBH"
 
 ## pull image MS SQL server 
     
