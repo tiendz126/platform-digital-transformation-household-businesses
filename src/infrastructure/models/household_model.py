@@ -1,8 +1,8 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from infrastructure.databases.base import Base
 
-class AppointmentModel(Base):
-    __tablename__ = 'appointments'
+class Household(Base):
+    __tablename__ = 'households'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True)
