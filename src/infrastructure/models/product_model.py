@@ -8,7 +8,7 @@ class Warehouse(Base):
     id = Column(Integer, primary_key=True) # Cho phép NULL
     household_id=Column(Integer, ForeignKey("households.id"),nullable=False)
     name =Column(String(50),nullable=True)
-    address= Column(String(255),nullable=False)
+    image_url=Column(String(255),nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)

@@ -6,6 +6,7 @@ class Unit(Base):
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
+    household_id=Column(Integer, ForeignKey("households.id"),nullable=False)
     name =Column(String(50),nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)
