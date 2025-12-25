@@ -13,7 +13,7 @@ class AccountingLedger(Base):
     debit_amount=Column(Integer, nullable=True) # Chi
     credit_amount=Column(Integer, nullable=True) # Thu
     balance=Column(Integer, nullable=True)
-    document_number=Column(Integer,nullable=False) # Mẫu số theo thông tư 88/2021/TT-BTC
+    document_number=Column(String(50),nullable=False) # Mẫu số theo thông tư 88/2021/TT-BTC
     type=Column(String(50),nullable=False) # Thu / Chi
     status = Column(String(50), nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)

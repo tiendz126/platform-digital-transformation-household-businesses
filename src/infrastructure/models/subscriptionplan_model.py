@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
 from infrastructure.databases.base import Base
 from datetime import datetime
 class SubscriptionPlan(Base):
@@ -6,9 +6,10 @@ class SubscriptionPlan(Base):
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id=Column(Integer, primary_key=True) # Cho phép NULL
+    name=Column(String(50),nullable=False)
     user_id=Column(Integer, ForeignKey("users.id"),nullable=False) # Role Admin
     billing_cycle=Column(String(50),nullable=True)
-    price=Column(Integer, nullable=True)
+    price=Column(Numeric(10), nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)
     created_by= Column(String(50),nullable=True) # Role Admin

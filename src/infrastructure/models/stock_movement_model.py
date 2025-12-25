@@ -10,7 +10,7 @@ class StockMovement(Base):
     product_id=Column(Integer,ForeignKey("products.id"),nullable=False)
     unit_id=Column(Integer, ForeignKey("units.id"),nullable=False)
     warehouse_id=Column(Integer, ForeignKey("warehouses.id"),nullable=False)
-    type=Column(String(50),nullable=False)
+    movement_type=Column(String(50),nullable=False)
     quantity=Column(Integer,nullable=False)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)

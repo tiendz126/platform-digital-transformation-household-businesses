@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
 from infrastructure.databases.base import Base
 from datetime import datetime
 class InvoiceDetail(Base):
@@ -10,7 +10,7 @@ class InvoiceDetail(Base):
     product_unit_id=Column(Integer,ForeignKey("product_unit.id"),nullable=False) # Sản phẩm giá theo đơn vị
     vat=Column(Integer,nullable=False)
     discount=Column(Integer, nullable=True) 
-    price=Column(Integer, nullable=True)
+    price=Column(Numeric(10), nullable=True)
     description = Column(String(255), nullable=True)
     quantity=Column(Integer,nullable=False)
     status = Column(String(50), nullable=False)  # Draft / Confirm / Delete 

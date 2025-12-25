@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
 from infrastructure.databases.base import Base
 from datetime import datetime
 class ProductUnit(Base):
@@ -8,7 +8,7 @@ class ProductUnit(Base):
     id = Column(Integer, primary_key=True) # Cho phép NULL
     product_id=Column(Integer, ForeignKey("products.id"),nullable=False)
     unit_id=Column(Integer, ForeignKey("units.id"),nullable=False)
-    price=Column(Integer,nullable=True)
+    price=Column(Numeric(10),nullable=True)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)
     created_by= Column(String(50),nullable=True) # Role Owner 

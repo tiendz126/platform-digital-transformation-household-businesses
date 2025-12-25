@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
 from infrastructure.databases.base import Base
 from datetime import datetime
 class DebtRecord(Base):
@@ -7,8 +7,8 @@ class DebtRecord(Base):
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
     invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=False)
-    debt_amount=Column(Integer, nullable=False) # Số tiền nợ cho hóa đơn cụ thể
-    paid_amount=Column(Integer, nullable=True)  # Số tiền đã trả cho hóa đơn cụ thể
+    debt_amount=Column(Numeric(10), nullable=False) # Số tiền nợ cho hóa đơn cụ thể
+    paid_amount=Column(Numeric(10), nullable=True)  # Số tiền đã trả cho hóa đơn cụ thể
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
