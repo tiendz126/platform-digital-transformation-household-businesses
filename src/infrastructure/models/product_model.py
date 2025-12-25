@@ -1,8 +1,8 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from infrastructure.databases.base import Base
 from datetime import datetime
-class Warehouse(Base):
-    __tablename__ = 'warehouses'
+class Product(Base):
+    __tablename__ = 'products'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
