@@ -7,6 +7,7 @@ class Product(Base):
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
     household_id=Column(Integer, ForeignKey("households.id"),nullable=False)
+    category_id=Column(Integer,ForeignKey("categories.id"),nullable=False)
     name =Column(String(50),nullable=True)
     image_url=Column(String(255),nullable=True)
     description = Column(String(255), nullable=True)
