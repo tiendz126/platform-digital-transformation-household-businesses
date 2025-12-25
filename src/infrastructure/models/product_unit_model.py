@@ -15,3 +15,4 @@ class ProductUnit(Base):
     updated_by= Column(String(50),nullable=True) # Role Owner 
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+    

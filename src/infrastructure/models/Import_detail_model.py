@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class ImportDetail(Base):
@@ -14,3 +15,4 @@ class ImportDetail(Base):
     status = Column(String(50), nullable=False)  # Draft / Confirm / Delete 
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False)
+   

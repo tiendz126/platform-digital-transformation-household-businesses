@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
+from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class Payment(Base):
@@ -15,3 +16,4 @@ class Payment(Base):
     updated_by= Column(String(50),nullable=True)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+   

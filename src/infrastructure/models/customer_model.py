@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class Customer(Base):
@@ -17,3 +18,4 @@ class Customer(Base):
     updated_by= Column(String(50),nullable=True) # Role Owner
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+   

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from infrastructure.databases.base import Base
+from sqlalchemy.orm import relationship
 from datetime import datetime
 class User(Base):
     __tablename__ = 'users'
@@ -17,3 +18,4 @@ class User(Base):
     updated_by= Column(String(50),nullable=True)# Role Admin or Owner
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+   

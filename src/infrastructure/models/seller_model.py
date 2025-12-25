@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class Seller(Base):
@@ -16,4 +17,5 @@ class Seller(Base):
     created_by= Column(String(50),nullable=True)
     updated_by= Column(String(50),nullable=True)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
-    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False)
+   

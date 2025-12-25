@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class Category(Base):
@@ -12,3 +13,4 @@ class Category(Base):
     status = Column(String(50), nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+   
