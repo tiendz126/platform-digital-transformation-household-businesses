@@ -12,4 +12,4 @@ class Subscription(Base):
     end_date=Column(DateTime,nullable= False)
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
-    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=
+    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False)

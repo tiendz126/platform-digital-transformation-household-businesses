@@ -1,11 +1,12 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from infrastructure.databases.base import Base
 from datetime import datetime
-class Household(Base):
-    __tablename__ = 'households'
+class Seller(Base):
+    __tablename__ = 'sellers'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
+    household_id= Column(Integer, ForeignKey("households.id"),nullable=False)
     tax_code=Column(String(12),nullable=True,unique=True) # Mã số thuế hộ kinh doanh bằng số CCCD người đại diện
     name =Column(String(50),nullable=True)
     phone =Column(String(20),nullable=True)
