@@ -7,7 +7,7 @@ class AccountingLedger(Base):
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
-    invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=False)
+    invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=False,unique=True)
     transaction_date= Column(DateTime, nullable=False)
     description = Column(String(255), nullable=False)
     debit_amount=Column(Integer, nullable=True) # Chi

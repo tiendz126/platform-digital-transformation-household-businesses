@@ -14,3 +14,5 @@ class DebtRecord(Base):
     status = Column(String(50), nullable=False)
     created_at = Column(DateTime,default=datetime.utcnow,nullable=False)
     updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow,nullable=False) 
+    
+    
