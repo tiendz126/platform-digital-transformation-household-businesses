@@ -1,5 +1,4 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
-from sqlalchemy.orm import relationship
 from infrastructure.databases.base import Base
 from datetime import datetime
 class DebtRecord(Base):

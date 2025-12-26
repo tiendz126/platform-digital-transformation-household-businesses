@@ -1,6 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from infrastructure.databases.base import Base
-from sqlalchemy.orm import relationship
 from datetime import datetime
 class Unit(Base):
     __tablename__ = 'units'

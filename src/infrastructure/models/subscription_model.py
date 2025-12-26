@@ -1,6 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from infrastructure.databases.base import Base
-from sqlalchemy.orm import relationship
 from datetime import datetime
 class Subscription(Base):
     __tablename__ = 'subscriptions'

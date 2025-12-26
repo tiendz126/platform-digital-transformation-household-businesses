@@ -1,6 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from infrastructure.databases.base import Base
-from sqlalchemy.orm import relationship
 from datetime import datetime
 class StockMovement(Base):
     __tablename__ = 'stock_movement'
