@@ -2,13 +2,13 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Numeric
 from infrastructure.databases.base import Base
 from datetime import datetime
 class InvoiceDetail(Base):
-    __tablename__ = 'invoice_detail'
+    __tablename__ = 'invoice_details'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
     invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=False) # chi tiết hóa đơn 
     product_id=Column(Integer,ForeignKey("products.id"),nullable=False) # Sản phẩm
-    unit_id=Column(Integer,ForeignKey("products.id"),nullable=False) # đơn vị
+    unit_id=Column(Integer,ForeignKey("units.id"),nullable=False) # đơn vị
     vat=Column(Integer,nullable=False) # % vat
     discount=Column(Integer, nullable=True) # % discount
     price=Column(Numeric(10), nullable=True)

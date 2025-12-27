@@ -2,7 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Date
 from infrastructure.databases.base import Base
 from datetime import datetime
 class ImportRecipt(Base):
-    __tablename__ = 'import_recipt'
+    __tablename__ = 'import_recipts'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
