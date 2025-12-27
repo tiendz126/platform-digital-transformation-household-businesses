@@ -6,7 +6,7 @@ class ExportDetail(Base):
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
     id = Column(Integer, primary_key=True) # Cho phép NULL
-    export_id=Column(Integer,ForeignKey("export_recipts.id"),nullable=False)
+    export_id=Column(Integer,ForeignKey("export_receipts.id"),nullable=False)
     product_id=Column(Integer,ForeignKey("products.id"),nullable=False)
     unit_id=Column(Integer, ForeignKey("units.id"),nullable=False)
     quantity=Column(Integer,nullable=False)

@@ -3,10 +3,10 @@ from .category_model import Category
 from .customer_model import Customer
 from .debt_record_model import DebtRecord
 from .export_detail_model import ExportDetail
-from .export_recipt_model import ExportRecipt
+from .export_receipt_model import ExportReceipt
 from .household_model import Household
 from .import_detail_model import ImportDetail
-from .import_recipt_model import ImportRecipt
+from .import_receipt_model import ImportReceipt
 from .inventory_model import Inventory
 from .invoice_detail_model import InvoiceDetail
 from .invoice_model import Invoice
@@ -26,10 +26,10 @@ __all__ = [
     'Customer',
     'DebtRecord',
     'ExportDetail',
-    'ExportRecipt',
+    'ExportReceipt',
     'Household',
     'ImportDetail',
-    'ImportRecipt',
+    'ImportReceipt',
     'Inventory',
     'InvoiceDetail',
     'Invoice',
