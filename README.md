@@ -108,3 +108,7 @@ Object Relational Mapping
 Ánh xạ 1 class (OOP)  model src/infrastructure/models --> Table in database 
 Ánh xạ các mối quan hệ (Relational) -- Khoá ngoại CSDL 
 (n-n): many to many 
+
+## Lấy code mới nhất về
+    git clone https://github.com/phuongduclan/platform-digital-transformation-household-businesses.git
+## Update file Config.py theo password và database của bạn
