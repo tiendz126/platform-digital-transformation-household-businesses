@@ -89,7 +89,7 @@
     DB_NAME=QLBH
     
     
-    DATABASE_URI = "mssql+pymssql://sa:Aa%40123456@127.0.0.1:1433/QLBH"
+    DATABASE_URI = "mssql+pymssql://sa:%40Bina0608@127.0.0.1:1433/QLBH"
 
 ## pull image MS SQL server 
     
