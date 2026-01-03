@@ -68,8 +68,7 @@
      		pip install -r requirements.txt
    - Bước 4: Chạy mã xử lý dữ liệu
      ## Run:
-    		python app.py
-
+    	python app.py
 
      Truy câp http://localhost:6868/docs
 
