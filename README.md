@@ -86,9 +86,9 @@
     DB_PASSWORD=%40Bina0608
     DB_HOST=127.0.0.1
     DB_PORT=1433
-    DB_NAME=Platform_db
+    DB_NAME=database_name
 
-    DATABASE_URI="mssql+pymssql://sa:%40Bina0608@127.0.0.1:1433/Platform_db"
+    DATABASE_URI="mssql+pymssql://sa:%40Bina0608@127.0.0.1:1433/database_name"
 
 ## pull image MS SQL server 
     
@@ -97,7 +97,7 @@
     ```
 ## Install MS SQL server in docker 
     ```bash
-    docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=@Bina0608" -p 1433:1433 --name sql_bizflow -hostname sql_bizflow -d mcr.microsoft.com/mssql/server:2025-latest
+    docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=@Bina0608" -p 1433:1433 --name sql_server -hostname sql_server -d mcr.microsoft.com/mssql/server:2025-latest
     ```
 ## Test connect SQL server 
 
