@@ -6,6 +6,7 @@ from infrastructure.models import (
     DebtRecord,
     ExportDetail,
     ExportReceipt,
+    Function,
     Household,
     ImportDetail,
     ImportReceipt,
@@ -15,6 +16,8 @@ from infrastructure.models import (
     Payment,
     PaymentMethod,
     Product,
+    Role,
+    RoleFunction,
     Seller,
     Subscription,
     SubscriptionPlan,
@@ -24,6 +27,7 @@ from infrastructure.models import (
     Warehouse
 )
 
+# Migration Entities -> Tables
 def init_db(app):
     init_mssql(app)
     
