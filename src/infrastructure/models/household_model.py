@@ -5,7 +5,7 @@ class Household(Base):
     __tablename__ = 'households'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     tax_code=Column(String(12),nullable=True,unique=True) # Mã số thuế hộ kinh doanh bằng số CCCD người đại diện
     name =Column(String(50),nullable=True)
     phone =Column(String(20),nullable=True)

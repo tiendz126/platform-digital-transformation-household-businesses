@@ -5,7 +5,7 @@ class Invoice(Base):
     __tablename__ = 'invoices'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     household_id=Column(Integer, ForeignKey("households.id"),nullable=False)
     seller_id=Column(Integer, ForeignKey("sellers.id"),nullable=True) # Hóa đơn mua
     customer_id=Column(Integer,ForeignKey("customers.id"),nullable=True) # Hóa đơn bán

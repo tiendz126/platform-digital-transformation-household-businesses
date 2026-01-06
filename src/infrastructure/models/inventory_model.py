@@ -5,7 +5,7 @@ class Inventory(Base):
     __tablename__ = 'inventories'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     product_id=Column(Integer,ForeignKey("products.id"),nullable=False)
     unit_id=Column(Integer, ForeignKey("units.id"),nullable=False)
     warehouse_id=Column(Integer, ForeignKey("warehouses.id"),nullable=False)

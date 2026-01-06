@@ -5,7 +5,7 @@ class Payment(Base):
     __tablename__ = 'payments'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=False)
     method_id=Column(Integer,ForeignKey("paymentmethods.id"),nullable=False)
     amount=Column(Numeric(10), nullable=False)

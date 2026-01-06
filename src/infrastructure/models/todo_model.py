@@ -5,7 +5,7 @@ class TodoModel(Base):
     __tablename__ = 'todos'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     status = Column(String(50), nullable=False)

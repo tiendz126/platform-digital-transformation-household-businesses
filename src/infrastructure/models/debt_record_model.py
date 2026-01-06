@@ -5,7 +5,7 @@ class DebtRecord(Base):
     __tablename__ = 'debt_record'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     customer_id=Column(Integer, ForeignKey("customers.id"),nullable=False)
     invoice_id=Column(Integer, ForeignKey("invoices.id"),nullable=True,unique=True) # Mã chứng từ hóa đơn nợ
     payment_id=Column(Integer, ForeignKey("payments.id"),nullable=True,unique=True) # Mã chứng từ thanh toán trả nợ

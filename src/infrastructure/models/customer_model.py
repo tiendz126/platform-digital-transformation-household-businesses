@@ -5,7 +5,7 @@ class Customer(Base):
     __tablename__ = 'customers'
     __table_args__ = {'extend_existing': True}  # Thêm dòng này
 
-    id = Column(Integer, primary_key=True) # Cho phép NULL
+    id = Column(Integer, primary_key=True, autoincrement=True) # Cho phép NULL
     household_id=Column(Integer, ForeignKey("households.id"),nullable=False)
     tax_code=Column(String(12),nullable=True,unique=True) # Mã số thuế hộ kinh doanh tương ứng CCCD người đại diện pháp luật
     name =Column(String(50),nullable=True)
