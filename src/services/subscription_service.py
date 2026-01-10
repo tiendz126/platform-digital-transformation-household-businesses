@@ -1,5 +1,5 @@
 """
-Subscription Service - Check household có subscription active không
+Subscription Service - Check household có subscription active không 
 """
 from datetime import datetime
 from infrastructure.databases.mssql import session
