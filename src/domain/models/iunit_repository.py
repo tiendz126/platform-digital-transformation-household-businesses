@@ -12,7 +12,7 @@ class IUnitRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> List[Unit]:
+    def list(self) -> List[Unit]:
         pass
 
     @abstractmethod
