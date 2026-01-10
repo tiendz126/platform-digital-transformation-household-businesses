@@ -14,28 +14,103 @@ response_schema = UserResponseSchema()
 update_schema = UserUpdateSchema()
 
 @admin_bp.route('/', methods=['GET'])
-@require_permission(function_code="F001", methods=["GET"])
+@require_permission(function_code="F005", methods=["GET"])
 def list_users():
     """
-    List all users (Admin only) - CHỈ Admin và Owner, KHÔNG Employee
+    List all users (Admin only) - View, search, filter Owner accounts
+    Business Logic: Admin quản lý Owner accounts - view, search, filter, activate/deactivate, detailed profiles
     ---
     get:
-      summary: List all users (Admin and Owner only)
+      summary: List all users (Admin and Owner only) - với search và filter
       security:
         - Bearer: []
       tags:
         - Admin Users
+      parameters:
+        - name: role_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by role_id (e.g., 2 for Owner - để Admin quản lý Owner accounts)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Active, Inactive]
+          description: Filter by status (Active/Inactive) - để activate/deactivate Owner accounts
+        - name: household_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by household_id (xem Owner accounts của household cụ thể)
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by user_name or email (case-insensitive, partial match) - để search Owner accounts
       responses:
         200:
-          description: List of users (Admin and Owner only)
+          description: List of users (Admin and Owner only) với search và filter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    household_id:
+                      type: integer
+                      nullable: true
+                    role_id:
+                      type: integer
+                    user_name:
+                      type: string
+                    email:
+                      type: string
+                      nullable: true
+                    status:
+                      type: string
+                    description:
+                      type: string
+                      nullable: true
+                    created_by:
+                      type: string
+                      nullable: true
+                    updated_by:
+                      type: string
+                      nullable: true
+                    created_at:
+                      type: string
+                    updated_at:
+                      type: string
     """
     # Business rule: Admin chỉ quản lý Admin và Owner (exclude Employee)
+    # Business Logic: Admin quản lý Owner accounts - view, search, filter, activate/deactivate
+    
+    # Get query parameters for search and filter
+    role_id = request.args.get('role_id', type=int)  # Filter by role (e.g., Owner = 2)
+    status = request.args.get('status', type=str)  # Filter by status (Active/Inactive)
+    household_id = request.args.get('household_id', type=int)  # Filter by household_id
+    search_term = request.args.get('search', type=str)  # Search by user_name or email
+    
     # Business rule được xử lý ở Application Layer (UserService)
-    users = user_service.list_users(exclude_employee=True)
-    return jsonify(response_schema.dump(users, many=True)), 200
+    try:
+        users = user_service.list_users(
+            exclude_employee=True,  # Admin chỉ quản lý Admin và Owner, KHÔNG Employee
+            role_id=role_id,  # Filter by role (e.g., chỉ Owner accounts)
+            status=status,  # Filter by status (Active/Inactive) - để activate/deactivate
+            household_id=household_id,  # Filter by household_id
+            search_term=search_term  # Search by user_name or email
+        )
+        return jsonify(response_schema.dump(users, many=True)), 200
+    except ValueError as e:
+        # Business rule violation: Admin không được filter Employee role
+        return jsonify({'error': str(e)}), 403
 
 @admin_bp.route('/', methods=['POST'])
-@require_permission(function_code="F001", methods=["POST"])
+@require_permission(function_code="F005", methods=["POST"])
 def create_user():
     """
     Create user (Admin only)
@@ -78,13 +153,14 @@ def create_user():
         return jsonify({'error': str(e)}), 403
 
 @admin_bp.route('/<int:user_id>', methods=['GET'])
-@require_permission(function_code="F001", methods=["GET"])
+@require_permission(function_code="F005", methods=["GET"])
 def get_user(user_id):
     """
-    Get user by id (Admin only) - CHỈ Admin và Owner, KHÔNG Employee
+    Get user by id (Admin only) - View detailed profile của Owner account
+    Business Logic: Admin xem detailed profile của Owner accounts
     ---
     get:
-      summary: Get user by id (Admin and Owner only)
+      summary: Get user by id - View detailed profile (Admin and Owner only)
       security:
         - Bearer: []
       parameters:
@@ -93,11 +169,47 @@ def get_user(user_id):
           required: true
           schema:
             type: integer
+          description: ID của Owner account để xem detailed profile
       tags:
         - Admin Users
       responses:
         200:
-          description: User found
+          description: Detailed profile của Owner account (bao gồm id, household_id, role_id, user_name, email, status, description, created_by, updated_by, created_at, updated_at)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  household_id:
+                    type: integer
+                    nullable: true
+                  role_id:
+                    type: integer
+                  user_name:
+                    type: string
+                  email:
+                    type: string
+                    nullable: true
+                  status:
+                    type: string
+                    description: Active hoặc Inactive - để activate/deactivate
+                  description:
+                    type: string
+                    nullable: true
+                  created_by:
+                    type: string
+                    nullable: true
+                  updated_by:
+                    type: string
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
         403:
           description: Admin cannot access Employee. Use /api/owner/employees/ instead
         404:
@@ -114,30 +226,53 @@ def get_user(user_id):
         return jsonify({'error': str(e)}), 403
 
 @admin_bp.route('/<int:user_id>', methods=['PUT'])
-@require_permission(function_code="F001", methods=["PUT"])
+@require_permission(function_code="F005", methods=["PUT"])
 def update_user(user_id):
     """
-    Update user (Admin only)
+    Update user (Admin only) - Activate/Deactivate Owner accounts
+    Business Logic: Admin activate/deactivate Owner accounts qua status field
     ---
     put:
-      summary: Update user
+      summary: Update user - Activate/Deactivate Owner accounts
+      security:
+        - Bearer: []
       parameters:
         - name: user_id
           in: path
           required: true
           schema:
             type: integer
+          description: ID của Owner account để activate/deactivate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdate'
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Active, Inactive]
+                  description: Active để activate Owner account, Inactive để deactivate
+                user_name:
+                  type: string
+                  description: Optional - Update user_name
+                email:
+                  type: string
+                  description: Optional - Update email
+                description:
+                  type: string
+                  description: Optional - Update description
+                updated_by:
+                  type: string
+                  description: Optional - Admin username who updated
       tags:
         - Admin Users
       responses:
         200:
-          description: User updated successfully
+          description: Owner account updated successfully (activated/deactivated)
+        403:
+          description: Admin cannot update Employee. Only Owner can manage Employee via /api/owner/employees/
         404:
           description: User not found
     """
@@ -168,7 +303,7 @@ def update_user(user_id):
         return jsonify({'error': str(e)}), 403
 
 @admin_bp.route('/<int:user_id>', methods=['DELETE'])
-@require_permission(function_code="F001", methods=["DELETE"])
+@require_permission(function_code="F005", methods=["DELETE"])
 def delete_user(user_id):
     """
     Delete user (Admin only) - CHỈ Admin và Owner, KHÔNG Employee

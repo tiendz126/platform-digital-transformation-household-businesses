@@ -4,7 +4,7 @@ from typing import List, Optional
 from infrastructure.databases.mssql import session
 from infrastructure.models.subscription_model import Subscription as SubscriptionModel
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 
 class SubscriptionRepository(ISubscriptionRepository):
     def __init__(self, session: Session = session):
@@ -12,7 +12,8 @@ class SubscriptionRepository(ISubscriptionRepository):
 
     def add(self, subscription: Subscription) -> SubscriptionModel:
         """
-        Thêm subscription mới
+        Add subscription to session (NO COMMIT - let controller manage transaction)
+        Transaction management: Controller phải commit/rollback
         """
         try:
             sub_model = SubscriptionModel(
@@ -25,11 +26,13 @@ class SubscriptionRepository(ISubscriptionRepository):
                 updated_at=subscription.updated_at
             )
             self.session.add(sub_model)
-            self.session.commit()
-            self.session.refresh(sub_model)
+            # KHÔNG commit ở đây - để controller quản lý transaction
+            # self.session.commit()
+            self.session.flush()  # Flush để lấy ID, nhưng không commit
             return sub_model
         except Exception as e:
-            self.session.rollback()
+            # KHÔNG rollback ở đây - để controller quản lý transaction
+            # self.session.rollback()
             raise ValueError(f"Error creating subscription: {str(e)}")
 
     def get_by_id(self, subscription_id: int) -> Optional[SubscriptionModel]:
@@ -46,46 +49,40 @@ class SubscriptionRepository(ISubscriptionRepository):
 
     def update(self, subscription: SubscriptionModel) -> SubscriptionModel:
         """
-        Cập nhật subscription
+        Update subscription in session (NO COMMIT - let controller manage transaction)
         """
-        try:
-            sub_model = self.get_by_id(subscription.id)
-            if not sub_model:
-                raise ValueError("Subscription not found")
+        sub_model = self.get_by_id(subscription.id)
+        if not sub_model:
+            raise ValueError("Subscription not found")
 
-            sub_model.plan_id = subscription.plan_id
-            sub_model.household_id = subscription.household_id
-            sub_model.start_date = subscription.start_date
-            sub_model.end_date = subscription.end_date
-            sub_model.is_active = subscription.is_active
-            sub_model.updated_at = subscription.updated_at or datetime.utcnow()
+        sub_model.plan_id = subscription.plan_id
+        sub_model.household_id = subscription.household_id
+        sub_model.start_date = subscription.start_date
+        sub_model.end_date = subscription.end_date
+        sub_model.is_active = subscription.is_active
+        sub_model.updated_at = subscription.updated_at or datetime.now(timezone.utc)
 
-            self.session.commit()
-            self.session.refresh(sub_model)
-            return sub_model
-        except Exception as e:
-            self.session.rollback()
-            raise ValueError(f"Error updating subscription: {str(e)}")
+        # KHÔNG commit ở đây - để controller quản lý transaction
+        # self.session.commit()
+        self.session.flush()  # Flush để refresh, nhưng không commit
+        return sub_model
 
     def delete(self, subscription_id: int) -> None:
         """
-        Xóa subscription theo ID
+        Delete subscription from session (NO COMMIT - let controller manage transaction)
         """
-        try:
-            sub_model = self.get_by_id(subscription_id)
-            if not sub_model:
-                raise ValueError("Subscription not found")
-            self.session.delete(sub_model)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise ValueError(f"Error deleting subscription: {str(e)}")
+        sub_model = self.get_by_id(subscription_id)
+        if not sub_model:
+            raise ValueError("Subscription not found")
+        self.session.delete(sub_model)
+        # KHÔNG commit ở đây - để controller quản lý transaction
+        # self.session.commit()
 
     def get_by_household_id(self, household_id: int) -> Optional[SubscriptionModel]:
         """
         Lấy subscription active theo household_id
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         return self.session.query(SubscriptionModel).filter(
             SubscriptionModel.household_id == household_id,
             SubscriptionModel.is_active == True,

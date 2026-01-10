@@ -2,17 +2,130 @@ from flask import Blueprint, request, jsonify
 from services.subscription_plan_service import SubscriptionPlanService
 from infrastructure.repositories.subscription_plan_repository import SubscriptionPlanRepository
 from api.schemas.subscription_plan import SubscriptionPlanRequestSchema, SubscriptionPlanResponseSchema
+from api.decorators.auth_decorators import require_permission
 from infrastructure.databases.mssql import session
-from datetime import datetime
+from datetime import datetime, timezone
 
-bp = Blueprint('admin_subscription_plan', __name__, url_prefix='/api/admin/subscription-plans')
+# Admin endpoints (F002: manage_subscription_plans)
+admin_bp = Blueprint('admin_subscription_plan', __name__, url_prefix='/api/admin/subscription-plans')
+
+# Public endpoint (không cần auth - Owner chọn plan khi đăng ký)
+public_bp = Blueprint('public_subscription_plan', __name__, url_prefix='/api/public/subscription-plans')
 
 service = SubscriptionPlanService(SubscriptionPlanRepository(session=session))
 request_schema = SubscriptionPlanRequestSchema()
 response_schema = SubscriptionPlanResponseSchema()
 
-# ---------------- GET ALL ----------------
-@bp.route('', methods=['GET'])
+# ---------------- PUBLIC ENDPOINT (No auth required) ----------------
+@public_bp.route('', methods=['GET'])
+def list_plans_public():
+    """
+    List all subscription plans (Public - No auth required)
+    Owner sử dụng endpoint này để chọn plan khi đăng ký
+    ---
+    get:
+      summary: Get all subscription plans (Public)
+      tags:
+        - Public SubscriptionPlans
+      responses:
+        200:
+          description: List of subscription plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "Premium Plan"
+                    price:
+                      type: number
+                      example: 150.0
+                    billing_cycle:
+                      type: string
+                      example: "monthly"
+                    description:
+                      type: string
+                      example: "Gói đăng ký cao cấp"
+                    status:
+                      type: string
+                      example: "active"
+                    created_at:
+                      type: string
+                      example: "2026-01-09T17:00:00Z"
+                    updated_at:
+                      type: string
+                      example: "2026-01-09T17:00:00Z"
+    """
+    plans = service.list_plans()
+    # Chỉ trả về plans có status = "active"
+    active_plans = [plan for plan in plans if getattr(plan, 'status', '').lower() == 'active']
+    return jsonify(response_schema.dump(active_plans, many=True)), 200
+
+# ---------------- OWNER ENDPOINTS (F102: view_own_household - Read subscription plans để upgrade) ----------------
+owner_bp = Blueprint('owner_subscription_plan', __name__, url_prefix='/api/owner/subscription-plans')
+
+@owner_bp.route('', methods=['GET'])
+@require_permission(function_code="F102", methods=["GET"])  # Owner xem subscription plans để upgrade (dùng F102)
+def list_plans_owner():
+    """
+    List all active subscription plans (Owner only) - để Owner xem và chọn plan khi upgrade
+    Business Logic: Owner xem subscription plans để upgrade subscription của household mình
+    ---
+    get:
+      summary: Get all active subscription plans (Owner only - để upgrade subscription)
+      security:
+        - Bearer: []
+      tags:
+        - Owner SubscriptionPlans
+      responses:
+        200:
+          description: List of active subscription plans (để Owner chọn khi upgrade)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "Premium Plan"
+                    price:
+                      type: number
+                      example: 150.0
+                    billing_cycle:
+                      type: string
+                      example: "monthly"
+                    description:
+                      type: string
+                      example: "Gói đăng ký cao cấp"
+                    status:
+                      type: string
+                      example: "active"
+                    created_at:
+                      type: string
+                      example: "2026-01-09T17:00:00Z"
+                    updated_at:
+                      type: string
+                      example: "2026-01-09T17:00:00Z"
+    """
+    # Owner xem subscription plans để upgrade - chỉ trả về active plans
+    plans = service.list_plans()
+    active_plans = [plan for plan in plans if getattr(plan, 'status', '').lower() == 'active']
+    return jsonify(response_schema.dump(active_plans, many=True)), 200
+
+# ---------------- ADMIN ENDPOINTS (F002: manage_subscription_plans) ----------------
+@admin_bp.route('', methods=['GET'])
+@require_permission(function_code="F002", methods=["GET"])
 def list_plans():
     """
     List all subscription plans
@@ -51,7 +164,8 @@ def list_plans():
     return jsonify(response_schema.dump(plans, many=True)), 200
 
 # ---------------- CREATE ----------------
-@bp.route('', methods=['POST'])
+@admin_bp.route('', methods=['POST'])
+@require_permission(function_code="F002", methods=["POST"])
 def create_plan():
     """
     Create a new subscription plan
@@ -126,7 +240,7 @@ def create_plan():
     if errors:
         return jsonify(errors), 400
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     plan = service.create_plan(
         name=data['name'],
         price=data['price'],
@@ -142,7 +256,8 @@ def create_plan():
     return jsonify(response_schema.dump(plan)), 201
 
 # ---------------- GET BY ID ----------------
-@bp.route('/<int:id>', methods=['GET'])
+@admin_bp.route('/<int:id>', methods=['GET'])
+@require_permission(function_code="F002", methods=["GET"])
 def get_plan(id):
     """
     Get subscription plan by ID
@@ -190,7 +305,8 @@ def get_plan(id):
     return jsonify(response_schema.dump(plan)), 200
 
 # ---------------- UPDATE ----------------
-@bp.route('/<int:id>', methods=['PUT'])
+@admin_bp.route('/<int:id>', methods=['PUT'])
+@require_permission(function_code="F002", methods=["PUT"])
 def update_plan(id):
     """
     Update subscription plan by ID
@@ -262,13 +378,14 @@ def update_plan(id):
         status=data.get('status'),
         created_by=data.get('created_by'),
         updated_by=data.get('updated_by'),
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     return jsonify(response_schema.dump(plan)), 200
 
 # ---------------- DELETE ----------------
-@bp.route('/<int:id>', methods=['DELETE'])
+@admin_bp.route('/<int:id>', methods=['DELETE'])
+@require_permission(function_code="F002", methods=["DELETE"])
 def delete_plan(id):
     """
     Delete subscription plan by ID
