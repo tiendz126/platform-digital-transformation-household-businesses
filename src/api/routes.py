@@ -7,6 +7,7 @@ from api.controllers.role_function_controller import bp as admin_role_functions_
 from api.controllers.product_controller import owner_bp as owner_products_bp, employee_bp as employee_products_bp
 from api.controllers.category_controller import owner_bp as owner_categories_bp, employee_bp as employee_categories_bp
 from api.controllers.unit_controller import owner_bp as owner_units_bp, employee_bp as employee_units_bp
+from api.controllers.warehouse_controller import owner_bp as owner_warehouses_bp, employee_bp as employee_warehouses_bp
 
 def register_routes(app):
     app.register_blueprint(todo_bp)
@@ -23,3 +24,5 @@ def register_routes(app):
     app.register_blueprint(employee_categories_bp)
     app.register_blueprint(owner_units_bp)
     app.register_blueprint(employee_units_bp)
+    app.register_blueprint(owner_warehouses_bp)
+    app.register_blueprint(employee_warehouses_bp)
