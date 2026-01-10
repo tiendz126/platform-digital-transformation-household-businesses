@@ -1,8 +1,14 @@
 from flask import Blueprint, request, g, jsonify
 from services.category_service import CategoryService
 from infrastructure.repositories.category_repository import CategoryRepository
-from api.schemas.category import CategoryRequestSchema, CategoryResponseSchema
+from api.schemas.category import (
+    CategoryRequestSchema,
+    CategoryUpdateSchema,
+    CategoryResponseSchema
+)
 from api.decorators.auth_decorators import require_permission
+
+# ================= BLUEPRINT =================
 
 owner_bp = Blueprint(
     "owner_categories",
@@ -17,7 +23,9 @@ employee_bp = Blueprint(
 )
 
 category_service = CategoryService(CategoryRepository())
+
 request_schema = CategoryRequestSchema()
+update_schema = CategoryUpdateSchema()
 response_schema = CategoryResponseSchema()
 
 # ================= OWNER – F103 =================
@@ -35,12 +43,6 @@ def owner_list_categories():
       responses:
         200:
           description: List of categories
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CategoryResponse'
     """
     categories = category_service.list_categories(g.household_id)
     return jsonify(response_schema.dump(categories, many=True)), 200
@@ -65,10 +67,6 @@ def owner_create_category():
       responses:
         201:
           description: Category created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponse'
         422:
           description: Validation error
     """
@@ -136,15 +134,15 @@ def owner_update_category(category_id):
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CategoryRequest'
+              $ref: '#/components/schemas/CategoryUpdate'
       responses:
         200:
           description: Category updated successfully
-        404:
-          description: Category not found
+        422:
+          description: Validation error
     """
     data = request.get_json()
-    errors = request_schema.validate(data)
+    errors = update_schema.validate(data)
     if errors:
         return jsonify(errors), 422
 
@@ -182,7 +180,7 @@ def owner_delete_category(category_id):
     return "", 204
 
 
-# ================= EMPLOYEE – F202 =================
+# ================= EMPLOYEE – F202 (READ ONLY) =================
 
 @employee_bp.route("", methods=["GET"])
 @require_permission(function_code="F202", methods=["GET"])
@@ -200,6 +198,8 @@ def employee_list_categories():
     """
     categories = category_service.list_categories(g.household_id)
     return jsonify(response_schema.dump(categories, many=True)), 200
+
+
 @employee_bp.route("/<int:category_id>", methods=["GET"])
 @require_permission(function_code="F202", methods=["GET"])
 def employee_get_category(category_id):

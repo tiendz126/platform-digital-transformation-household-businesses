@@ -16,6 +16,7 @@ class CategoryUpdateSchema(Schema):
         required=False,
         validate=validate.OneOf(["ACTIVE", "INACTIVE"])
     )
+    
 class CategoryResponseSchema(Schema):
     id = fields.Int(required=True)
     household_id = fields.Int(required=True)
