@@ -1,5 +1,3 @@
-# src/services/subscription_plan_service.py
-
 from domain.models.subscription_plan import SubscriptionPlan
 from domain.models.isubscription_plan_repository import ISubscriptionPlanRepository
 from typing import List, Optional
@@ -13,7 +11,12 @@ class SubscriptionPlanService:
         self,
         name: str,
         price: float,
-        duration_days: int,
+        user_id: int,
+        billing_cycle: Optional[str] = None,
+        description: Optional[str] = None,
+        status: Optional[str] = "active",
+        created_by: Optional[str] = None,
+        updated_by: Optional[str] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None
     ) -> SubscriptionPlan:
@@ -21,7 +24,12 @@ class SubscriptionPlanService:
             id=None,
             name=name,
             price=price,
-            duration_days=duration_days,
+            user_id=user_id,
+            billing_cycle=billing_cycle,
+            description=description,
+            status=status,
+            created_by=created_by,
+            updated_by=updated_by,
             created_at=created_at or datetime.utcnow(),
             updated_at=updated_at or datetime.utcnow()
         )
@@ -41,7 +49,10 @@ class SubscriptionPlanService:
         plan_id: int,
         name: Optional[str] = None,
         price: Optional[float] = None,
-        duration_days: Optional[int] = None,
+        billing_cycle: Optional[str] = None,
+        description: Optional[str] = None,
+        status: Optional[str] = None,
+        updated_by: Optional[str] = None,
         updated_at: Optional[datetime] = None
     ) -> SubscriptionPlan:
         plan = self.repository.get_by_id(plan_id)
@@ -51,7 +62,10 @@ class SubscriptionPlanService:
         plan.update(
             name=name,
             price=price,
-            duration_days=duration_days
+            billing_cycle=billing_cycle,
+            description=description,
+            status=status,
+            updated_by=updated_by
         )
         plan.updated_at = updated_at or datetime.utcnow()
 

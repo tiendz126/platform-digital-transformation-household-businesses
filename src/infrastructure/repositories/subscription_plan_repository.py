@@ -4,7 +4,7 @@ from domain.models.isubscription_plan_repository import ISubscriptionPlanReposit
 from domain.models.subscription_plan import SubscriptionPlan
 from typing import List, Optional
 from infrastructure.databases.mssql import session
-from infrastructure.models.subscription_plan_model import SubscriptionPlan as SubscriptionPlanModel
+from infrastructure.models.subscriptionplan_model import SubscriptionPlan as SubscriptionPlanModel
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -20,7 +20,12 @@ class SubscriptionPlanRepository(ISubscriptionPlanRepository):
             plan_model = SubscriptionPlanModel(
                 name=plan.name,
                 price=plan.price,
-                duration_days=plan.duration_days,
+                user_id=plan.user_id,
+                billing_cycle=plan.billing_cycle,
+                description=plan.description,
+                status=plan.status,
+                created_by=plan.created_by,
+                updated_by=plan.updated_by,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at
             )
@@ -52,7 +57,12 @@ class SubscriptionPlanRepository(ISubscriptionPlanRepository):
                 id=plan.id,
                 name=plan.name,
                 price=plan.price,
-                duration_days=plan.duration_days,
+                user_id=plan.user_id,
+                billing_cycle=plan.billing_cycle,
+                description=plan.description,
+                status=plan.status,
+                created_by=plan.created_by,
+                updated_by=plan.updated_by,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at
             )

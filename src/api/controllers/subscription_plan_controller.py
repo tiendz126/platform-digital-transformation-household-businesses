@@ -40,9 +40,6 @@ def list_plans():
                     price:
                       type: number
                       example: 150.0
-                    duration_days:
-                      type: integer
-                      example: 30
                     created_at:
                       type: string
                       example: "2026-01-09T17:00:00Z"
@@ -76,9 +73,18 @@ def create_plan():
                 price:
                   type: number
                   example: 150.0
-                duration_days:
+                status:
+                  type: string
+                  example: "active"
+                user_id:
                   type: integer
-                  example: 30
+                  example: 123
+                billing_cycle:
+                  type: string
+                  example: "monthly"
+                description:
+                  type: string
+                  example: "Gói đăng ký cao cấp"
       responses:
         201:
           description: Subscription plan created
@@ -96,9 +102,15 @@ def create_plan():
                   price:
                     type: number
                     example: 150.0
-                  duration_days:
-                    type: integer
-                    example: 30
+                  status:
+                    type: string
+                    example: "active"
+                  billing_cycle:
+                    type: string
+                    example: "monthly"
+                  description:
+                    type: string
+                    example: "Gói đăng ký cao cấp"
                   created_at:
                     type: string
                     example: "2026-01-09T17:00:00Z"
@@ -108,6 +120,7 @@ def create_plan():
         400:
           description: Invalid input
     """
+
     data = request.get_json()
     errors = request_schema.validate(data)
     if errors:
@@ -117,7 +130,12 @@ def create_plan():
     plan = service.create_plan(
         name=data['name'],
         price=data['price'],
-        duration_days=data['duration_days'],
+        user_id=data['user_id'],
+        billing_cycle=data.get('billing_cycle'),
+        description=data.get('description'),
+        status=data.get('status', 'active'),
+        created_by=data.get('created_by'),
+        updated_by=data.get('updated_by'),
         created_at=now,
         updated_at=now
     )
@@ -157,9 +175,6 @@ def get_plan(id):
                   price:
                     type: number
                     example: 150.0
-                  duration_days:
-                    type: integer
-                    example: 30
                   created_at:
                     type: string
                     example: "2026-01-09T17:00:00Z"
@@ -204,9 +219,6 @@ def update_plan(id):
                 price:
                   type: number
                   example: 150.0
-                duration_days:
-                  type: integer
-                  example: 30
       responses:
         200:
           description: Updated subscription plan
@@ -224,9 +236,6 @@ def update_plan(id):
                   price:
                     type: number
                     example: 150.0
-                  duration_days:
-                    type: integer
-                    example: 30
                   created_at:
                     type: string
                     example: "2026-01-09T17:00:00Z"

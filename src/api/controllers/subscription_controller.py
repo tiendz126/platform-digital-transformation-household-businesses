@@ -7,7 +7,7 @@ from datetime import datetime
 
 bp = Blueprint('admin_subscription', __name__, url_prefix='/api/admin/subscriptions')
 
-service = SubscriptionService(SubscriptionRepository(session=session))
+service = SubscriptionService(session)
 request_schema = SubscriptionRequestSchema()
 response_schema = SubscriptionResponseSchema()
 
@@ -130,16 +130,24 @@ def create_subscription():
     errors = request_schema.validate(data)
     if errors:
         return jsonify(errors), 400
-    now = datetime.utcnow()
+
+    # Parse start_date và end_date từ ISO string sang datetime
+    start_date = datetime.fromisoformat(data['start_date'].replace("Z", "+00:00")) if data.get('start_date') else datetime.utcnow()
+    end_date = datetime.fromisoformat(data['end_date'].replace("Z", "+00:00")) if data.get('end_date') else None
+
+    # Kiểm tra end_date bắt buộc
+    if not end_date:
+        return jsonify({"error": "end_date is required"}), 400
+
+    # Tạo subscription sử dụng các biến đã parse
     sub = service.create_subscription(
         plan_id=data['plan_id'],
         household_id=data['household_id'],
-        start_date=data.get('start_date', now),
-        end_date=data.get('end_date'),
-        is_active=data.get('is_active', True),
-        created_at=now,
-        updated_at=now
+        start_date=start_date,
+        end_date=end_date,
+        is_active=data.get('is_active', True)
     )
+
     return jsonify(response_schema.dump(sub)), 201
 
 
@@ -279,16 +287,23 @@ def update_subscription(id):
     errors = request_schema.validate(data)
     if errors:
         return jsonify(errors), 400
+
+    # Parse start_date và end_date nếu có
+    start_date = datetime.fromisoformat(data['start_date'].replace("Z", "+00:00")) if data.get('start_date') else None
+    end_date = datetime.fromisoformat(data['end_date'].replace("Z", "+00:00")) if data.get('end_date') else None
+
     sub = service.update_subscription(
         subscription_id=id,
         plan_id=data.get('plan_id'),
         household_id=data.get('household_id'),
-        start_date=data.get('start_date'),
-        end_date=data.get('end_date'),
+        start_date=start_date,
+        end_date=end_date,
         is_active=data.get('is_active'),
         updated_at=datetime.utcnow()
     )
+
     return jsonify(response_schema.dump(sub)), 200
+
 
 
 @bp.route('/<int:id>', methods=['DELETE'])
