@@ -1,13 +1,7 @@
 from flask import Blueprint, request, g, jsonify
 from services.warehouse_service import WarehouseService
 from infrastructure.repositories.warehouse_repository import WarehouseRepository
-from api.schemas.warehouse import (
-    WarehouseRequestSchema,
-    WarehouseUpdateSchema,
-    WarehouseResponseSchema
-)
 from api.decorators.auth_decorators import require_permission
-
 
 # ================= OWNER – F107 =================
 
@@ -27,10 +21,9 @@ employee_bp = Blueprint(
 
 warehouse_service = WarehouseService(WarehouseRepository())
 
-request_schema = WarehouseRequestSchema()
-update_schema = WarehouseUpdateSchema()
-response_schema = WarehouseResponseSchema()
-
+# =====================================================
+# OWNER
+# =====================================================
 
 @owner_bp.route("", methods=["GET"])
 @require_permission(function_code="F107", methods=["GET"])
@@ -40,22 +33,15 @@ def owner_list_warehouses():
     ---
     get:
       summary: List warehouses
-      security:
-        - Bearer: []
       tags:
         - Owner Warehouses
+      security:
+        - Bearer: []
       responses:
         200:
           description: List of warehouses
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WarehouseResponse'
     """
-    warehouses = warehouse_service.list_warehouses(g.household_id)
-    return jsonify(response_schema.dump(warehouses, many=True)), 200
+    return jsonify(warehouse_service.list_warehouses(g.household_id)), 200
 
 
 @owner_bp.route("", methods=["POST"])
@@ -66,39 +52,42 @@ def owner_create_warehouse():
     ---
     post:
       summary: Create warehouse
-      security:
-        - Bearer: []
       tags:
         - Owner Warehouses
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WarehouseRequest'
+      security:
+        - Bearer: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - address
+            properties:
+              name:
+                type: string
+              address:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         201:
-          description: Warehouse created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WarehouseResponse'
-        422:
-          description: Validation error
+          description: Warehouse created
     """
     data = request.get_json()
-    errors = request_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
-
     warehouse = warehouse_service.create_warehouse(
         household_id=g.household_id,
         name=data["name"],
         address=data["address"],
         description=data.get("description"),
-        status=data.get("status")
+        status=data.get("status", "ACTIVE")
     )
-    return jsonify(response_schema.dump(warehouse)), 201
+    return jsonify(warehouse), 201
 
 
 @owner_bp.route("/<int:warehouse_id>", methods=["GET"])
@@ -108,28 +97,26 @@ def owner_get_warehouse(warehouse_id):
     Get warehouse by id (Owner only)
     ---
     get:
-      summary: Get warehouse detail
-      security:
-        - Bearer: []
+      summary: Get warehouse
       tags:
         - Owner Warehouses
+      security:
+        - Bearer: []
       parameters:
         - name: warehouse_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         200:
           description: Warehouse detail
         404:
-          description: Warehouse not found
+          description: Not found
     """
     warehouse = warehouse_service.get_warehouse(warehouse_id, g.household_id)
     if not warehouse:
-        return jsonify({"message": "Warehouse not found"}), 404
-
-    return jsonify(response_schema.dump(warehouse)), 200
+        return jsonify({"error": "Warehouse not found"}), 404
+    return jsonify(warehouse), 200
 
 
 @owner_bp.route("/<int:warehouse_id>", methods=["PUT"])
@@ -140,33 +127,35 @@ def owner_update_warehouse(warehouse_id):
     ---
     put:
       summary: Update warehouse
-      security:
-        - Bearer: []
       tags:
         - Owner Warehouses
+      security:
+        - Bearer: []
       parameters:
         - name: warehouse_id
           in: path
           required: true
+          type: integer
+        - in: body
+          name: body
+          required: true
           schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WarehouseUpdate'
+            type: object
+            properties:
+              name:
+                type: string
+              address:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         200:
-          description: Warehouse updated successfully
-        404:
-          description: Warehouse not found
+          description: Warehouse updated
     """
     data = request.get_json()
-    errors = update_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
-
     warehouse = warehouse_service.update_warehouse(
         warehouse_id=warehouse_id,
         household_id=g.household_id,
@@ -175,7 +164,7 @@ def owner_update_warehouse(warehouse_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(response_schema.dump(warehouse)), 200
+    return jsonify(warehouse), 200
 
 
 @owner_bp.route("/<int:warehouse_id>", methods=["DELETE"])
@@ -186,25 +175,26 @@ def owner_delete_warehouse(warehouse_id):
     ---
     delete:
       summary: Delete warehouse
-      security:
-        - Bearer: []
       tags:
         - Owner Warehouses
+      security:
+        - Bearer: []
       parameters:
         - name: warehouse_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         204:
-          description: Warehouse deleted successfully
+          description: Deleted
     """
     warehouse_service.delete_warehouse(warehouse_id, g.household_id)
     return "", 204
 
 
-# ================= EMPLOYEE – READ ONLY =================
+# =====================================================
+# EMPLOYEE – READ ONLY
+# =====================================================
 
 @employee_bp.route("", methods=["GET"])
 @require_permission(function_code="F207", methods=["GET"])
@@ -214,16 +204,15 @@ def employee_list_warehouses():
     ---
     get:
       summary: List warehouses
-      security:
-        - Bearer: []
       tags:
         - Employee Warehouses
+      security:
+        - Bearer: []
       responses:
         200:
           description: List of warehouses
     """
-    warehouses = warehouse_service.list_warehouses(g.household_id)
-    return jsonify(response_schema.dump(warehouses, many=True)), 200
+    return jsonify(warehouse_service.list_warehouses(g.household_id)), 200
 
 
 @employee_bp.route("/<int:warehouse_id>", methods=["GET"])
@@ -233,25 +222,21 @@ def employee_get_warehouse(warehouse_id):
     Get warehouse by id (Employee – read only)
     ---
     get:
-      summary: Get warehouse detail
-      security:
-        - Bearer: []
+      summary: Get warehouse
       tags:
         - Employee Warehouses
+      security:
+        - Bearer: []
       parameters:
         - name: warehouse_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         200:
           description: Warehouse detail
-        404:
-          description: Warehouse not found
     """
     warehouse = warehouse_service.get_warehouse(warehouse_id, g.household_id)
     if not warehouse:
-        return jsonify({"message": "Warehouse not found"}), 404
-
-    return jsonify(response_schema.dump(warehouse)), 200
+        return jsonify({"error": "Warehouse not found"}), 404
+    return jsonify(warehouse), 200

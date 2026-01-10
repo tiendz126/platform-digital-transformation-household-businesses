@@ -1,20 +1,17 @@
 from flask import Blueprint, request, g, jsonify
 from services.unit_service import UnitService
 from infrastructure.repositories.unit_repository import UnitRepository
-from api.schemas.unit import (
-    UnitRequestSchema,
-    UnitUpdateSchema,
-    UnitResponseSchema
-)
 from api.decorators.auth_decorators import require_permission
 
-# ================= BLUEPRINT =================
+# ================= OWNER – F105 =================
 
 owner_bp = Blueprint(
     "owner_units",
     __name__,
     url_prefix="/api/owner/units"
 )
+
+# ================= EMPLOYEE – F204 (READ ONLY) =================
 
 employee_bp = Blueprint(
     "employee_units",
@@ -24,127 +21,131 @@ employee_bp = Blueprint(
 
 unit_service = UnitService(UnitRepository())
 
-request_schema = UnitRequestSchema()
-update_schema = UnitUpdateSchema()
-response_schema = UnitResponseSchema()
-
-# ================= OWNER – F105 =================
+# =====================================================
+# OWNER
+# =====================================================
 
 @owner_bp.route("", methods=["GET"])
-@require_permission(function_code="F105", methods=["GET"])
+@require_permission("F105", ["GET"])
 def owner_list_units():
     """
-    Get list of units (Owner only)
+    List units (Owner only)
     ---
     get:
       summary: List units
-      tags:
-        - Owner Units
+      tags: [Owner Units]
+      security:
+        - Bearer: []
       responses:
         200:
           description: List of units
     """
-    units = unit_service.list_units(g.household_id)
-    return jsonify(response_schema.dump(units, many=True)), 200
+    return jsonify(unit_service.list_units(g.household_id)), 200
 
 
 @owner_bp.route("", methods=["POST"])
-@require_permission(function_code="F105", methods=["POST"])
+@require_permission("F105", ["POST"])
 def owner_create_unit():
     """
     Create unit (Owner only)
     ---
     post:
-      summary: Create new unit
-      tags:
-        - Owner Units
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UnitRequest'
+      summary: Create unit
+      tags: [Owner Units]
+      security:
+        - Bearer: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         201:
-          description: Unit created successfully
-        422:
-          description: Validation error
+          description: Unit created
     """
     data = request.get_json()
-    errors = request_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
 
     unit = unit_service.create_unit(
         household_id=g.household_id,
         name=data["name"],
         description=data.get("description"),
-        status=data.get("status")
+        status=data.get("status", "ACTIVE")
     )
-    return jsonify(response_schema.dump(unit)), 201
+    return jsonify(unit), 201
 
 
 @owner_bp.route("/<int:unit_id>", methods=["GET"])
-@require_permission(function_code="F105", methods=["GET"])
+@require_permission("F105", ["GET"])
 def owner_get_unit(unit_id):
     """
     Get unit by id (Owner only)
     ---
     get:
-      summary: Get unit detail
-      tags:
-        - Owner Units
+      summary: Get unit
+      tags: [Owner Units]
+      security:
+        - Bearer: []
       parameters:
         - name: unit_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         200:
           description: Unit detail
         404:
-          description: Unit not found
+          description: Not found
     """
     unit = unit_service.get_unit(unit_id, g.household_id)
     if not unit:
-        return jsonify({"message": "Unit not found"}), 404
-
-    return jsonify(response_schema.dump(unit)), 200
+        return jsonify({"error": "Unit not found"}), 404
+    return jsonify(unit), 200
 
 
 @owner_bp.route("/<int:unit_id>", methods=["PUT"])
-@require_permission(function_code="F105", methods=["PUT"])
+@require_permission("F105", ["PUT"])
 def owner_update_unit(unit_id):
     """
     Update unit (Owner only)
     ---
     put:
       summary: Update unit
-      tags:
-        - Owner Units
+      tags: [Owner Units]
+      security:
+        - Bearer: []
       parameters:
         - name: unit_id
           in: path
           required: true
+          type: integer
+        - in: body
+          name: body
           schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UnitUpdate'
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         200:
-          description: Unit updated successfully
-        422:
-          description: Validation error
+          description: Unit updated
     """
     data = request.get_json()
-    errors = update_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
 
     unit = unit_service.update_unit(
         unit_id=unit_id,
@@ -153,48 +154,78 @@ def owner_update_unit(unit_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(response_schema.dump(unit)), 200
+    return jsonify(unit), 200
 
 
 @owner_bp.route("/<int:unit_id>", methods=["DELETE"])
-@require_permission(function_code="F105", methods=["DELETE"])
+@require_permission("F105", ["DELETE"])
 def owner_delete_unit(unit_id):
     """
     Delete unit (Owner only)
     ---
     delete:
       summary: Delete unit
-      tags:
-        - Owner Units
+      tags: [Owner Units]
+      security:
+        - Bearer: []
       parameters:
         - name: unit_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         204:
-          description: Unit deleted successfully
+          description: Deleted
     """
     unit_service.delete_unit(unit_id, g.household_id)
     return "", 204
 
 
-# ================= EMPLOYEE – F204 (READ ONLY) =================
+# =====================================================
+# EMPLOYEE – READ ONLY
+# =====================================================
 
 @employee_bp.route("", methods=["GET"])
-@require_permission(function_code="F204", methods=["GET"])
+@require_permission("F204", ["GET"])
 def employee_list_units():
     """
-    List units (Employee only – read only)
+    List units (Employee – read only)
     ---
     get:
-      summary: List units (Employee)
-      tags:
-        - Employee Units
+      summary: List units
+      tags: [Employee Units]
+      security:
+        - Bearer: []
       responses:
         200:
           description: List of units
     """
-    units = unit_service.list_units(g.household_id)
-    return jsonify(response_schema.dump(units, many=True)), 200
+    return jsonify(unit_service.list_units(g.household_id)), 200
+
+
+@employee_bp.route("/<int:unit_id>", methods=["GET"])
+@require_permission("F204", ["GET"])
+def employee_get_unit(unit_id):
+    """
+    Get unit by id (Employee – read only)
+    ---
+    get:
+      summary: Get unit
+      tags: [Employee Units]
+      security:
+        - Bearer: []
+      parameters:
+        - name: unit_id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Unit detail
+        404:
+          description: Not found
+    """
+    unit = unit_service.get_unit(unit_id, g.household_id)
+    if not unit:
+        return jsonify({"error": "Unit not found"}), 404
+    return jsonify(unit), 200

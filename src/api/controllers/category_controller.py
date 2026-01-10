@@ -1,20 +1,17 @@
 from flask import Blueprint, request, g, jsonify
 from services.category_service import CategoryService
 from infrastructure.repositories.category_repository import CategoryRepository
-from api.schemas.category import (
-    CategoryRequestSchema,
-    CategoryUpdateSchema,
-    CategoryResponseSchema
-)
 from api.decorators.auth_decorators import require_permission
 
-# ================= BLUEPRINT =================
+# ================= OWNER – F103 =================
 
 owner_bp = Blueprint(
     "owner_categories",
     __name__,
     url_prefix="/api/owner/categories"
 )
+
+# ================= EMPLOYEE – F202 =================
 
 employee_bp = Blueprint(
     "employee_categories",
@@ -24,127 +21,124 @@ employee_bp = Blueprint(
 
 category_service = CategoryService(CategoryRepository())
 
-request_schema = CategoryRequestSchema()
-update_schema = CategoryUpdateSchema()
-response_schema = CategoryResponseSchema()
-
-# ================= OWNER – F103 =================
+# =====================================================
+# OWNER
+# =====================================================
 
 @owner_bp.route("", methods=["GET"])
-@require_permission(function_code="F103", methods=["GET"])
+@require_permission("F103", ["GET"])
 def owner_list_categories():
     """
-    Get list of categories (Owner only)
+    List categories (Owner)
     ---
     get:
       summary: List categories
-      tags:
-        - Owner Categories
+      tags: [Owner Categories]
+      security: [{Bearer: []}]
       responses:
         200:
           description: List of categories
     """
-    categories = category_service.list_categories(g.household_id)
-    return jsonify(response_schema.dump(categories, many=True)), 200
+    return jsonify(category_service.list_categories(g.household_id)), 200
 
 
 @owner_bp.route("", methods=["POST"])
-@require_permission(function_code="F103", methods=["POST"])
+@require_permission("F103", ["POST"])
 def owner_create_category():
     """
-    Create category (Owner only)
+    Create category (Owner)
     ---
     post:
-      summary: Create new category
-      tags:
-        - Owner Categories
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryRequest'
+      summary: Create category
+      tags: [Owner Categories]
+      security: [{Bearer: []}]
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         201:
-          description: Category created successfully
-        422:
-          description: Validation error
+          description: Category created
     """
     data = request.get_json()
-    errors = request_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
 
     category = category_service.create_category(
         household_id=g.household_id,
         name=data["name"],
         description=data.get("description"),
-        status=data.get("status")
+        status=data.get("status", "ACTIVE")
     )
-    return jsonify(response_schema.dump(category)), 201
+    return jsonify(category), 201
 
 
 @owner_bp.route("/<int:category_id>", methods=["GET"])
-@require_permission(function_code="F103", methods=["GET"])
+@require_permission("F103", ["GET"])
 def owner_get_category(category_id):
     """
-    Get category by id (Owner only)
+    Get category by id (Owner)
     ---
     get:
-      summary: Get category detail
-      tags:
-        - Owner Categories
+      summary: Get category
+      tags: [Owner Categories]
+      security: [{Bearer: []}]
       parameters:
         - name: category_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         200:
           description: Category detail
         404:
-          description: Category not found
+          description: Not found
     """
     category = category_service.get_category(category_id, g.household_id)
     if not category:
-        return jsonify({"message": "Category not found"}), 404
-
-    return jsonify(response_schema.dump(category)), 200
+        return jsonify({"error": "Category not found"}), 404
+    return jsonify(category), 200
 
 
 @owner_bp.route("/<int:category_id>", methods=["PUT"])
-@require_permission(function_code="F103", methods=["PUT"])
+@require_permission("F103", ["PUT"])
 def owner_update_category(category_id):
     """
-    Update category (Owner only)
+    Update category (Owner)
     ---
     put:
       summary: Update category
-      tags:
-        - Owner Categories
+      tags: [Owner Categories]
+      security: [{Bearer: []}]
       parameters:
         - name: category_id
           in: path
           required: true
+          type: integer
+        - in: body
+          name: body
           schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryUpdate'
+            type: object
+            properties:
+              name: {type: string}
+              description: {type: string}
+              status:
+                type: string
+                enum: [ACTIVE, INACTIVE]
       responses:
         200:
-          description: Category updated successfully
-        422:
-          description: Validation error
+          description: Updated
     """
     data = request.get_json()
-    errors = update_schema.validate(data)
-    if errors:
-        return jsonify(errors), 422
 
     category = category_service.update_category(
         category_id=category_id,
@@ -153,77 +147,48 @@ def owner_update_category(category_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(response_schema.dump(category)), 200
+    return jsonify(category), 200
 
 
 @owner_bp.route("/<int:category_id>", methods=["DELETE"])
-@require_permission(function_code="F103", methods=["DELETE"])
+@require_permission("F103", ["DELETE"])
 def owner_delete_category(category_id):
     """
-    Delete category (Owner only)
+    Delete category (Owner)
     ---
     delete:
       summary: Delete category
-      tags:
-        - Owner Categories
+      tags: [Owner Categories]
+      security: [{Bearer: []}]
       parameters:
         - name: category_id
           in: path
           required: true
-          schema:
-            type: integer
+          type: integer
       responses:
         204:
-          description: Category deleted successfully
+          description: Deleted
     """
     category_service.delete_category(category_id, g.household_id)
     return "", 204
 
 
-# ================= EMPLOYEE – F202 (READ ONLY) =================
+# =====================================================
+# EMPLOYEE – READ ONLY
+# =====================================================
 
 @employee_bp.route("", methods=["GET"])
-@require_permission(function_code="F202", methods=["GET"])
+@require_permission("F202", ["GET"])
 def employee_list_categories():
     """
-    List categories (Employee only – read only)
+    List categories (Employee – read only)
     ---
     get:
-      summary: List categories (Employee)
-      tags:
-        - Employee Categories
+      summary: List categories
+      tags: [Employee Categories]
+      security: [{Bearer: []}]
       responses:
         200:
           description: List of categories
     """
-    categories = category_service.list_categories(g.household_id)
-    return jsonify(response_schema.dump(categories, many=True)), 200
-
-
-@employee_bp.route("/<int:category_id>", methods=["GET"])
-@require_permission(function_code="F202", methods=["GET"])
-def employee_get_category(category_id):
-    """
-    Get category by id (Employee only – read only)
-    ---
-    get:
-      summary: Get category detail (Employee)
-      tags:
-        - Employee Categories
-      parameters:
-        - name: category_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Category detail
-        404:
-          description: Category not found
-    """
-    category = category_service.get_category(category_id, g.household_id)
-    if not category:
-        return jsonify({"message": "Category not found"}), 404
-
-    return jsonify(response_schema.dump(category)), 200
+    return jsonify(category_service.list_categories(g.household_id)), 200
