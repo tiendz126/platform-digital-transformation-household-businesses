@@ -6,7 +6,7 @@ class CategoryRequestSchema(Schema):
     status = fields.Str(
         required=False,
         validate=validate.OneOf(["ACTIVE", "INACTIVE"]),
-        missing="ACTIVE"
+        load_default="ACTIVE"
     )
 
 class CategoryUpdateSchema(Schema):
