@@ -38,8 +38,7 @@ def create_app():
     # Register routes for Swagger
     with app.test_request_context():
         for rule in app.url_map.iter_rules():
-            # Include todo, auth, admin, owner, and public endpoints
-            if rule.endpoint.startswith(('todo.', 'auth.', 'admin_', 'owner_', 'public_')):
+            if rule.endpoint.startswith(('todo.', 'auth.', 'admin_', 'owner_', 'employee_', 'public')):
                 view_func = app.view_functions[rule.endpoint]
                 print(f"Adding path: {rule.rule} -> {view_func}")
                 spec.path(view=view_func)
