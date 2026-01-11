@@ -187,6 +187,7 @@ Build an application (mobile and/or web) that supports the following core functi
 | F213 | view_draft_orders | R |
 | F214 | confirm_draft_order | U |
 | F215 | receive_notifications | R |
+| F216 | view_warehouses | R |
 ### Rules
 1/ 25 model entities ở infrastructure là nền tảng không đụng vào, bám sát để code BE, yêu cầu đúng từng field và các quan hệ khóa chính khóa ngoại.
 2/ Todo là code mẫu, là chuẩn mực của toàn bộ Flask clean architecture system, yêu cầu dựa vào để code.
@@ -484,6 +485,10 @@ Build an application (mobile and/or web) that supports the following core functi
 - `GET /api/owner/warehouses/<id>` - Get warehouse by id (Owner only)
 - `PUT /api/owner/warehouses/<id>` - Update warehouse (Owner only)
 - `DELETE /api/owner/warehouses/<id>` - Delete warehouse (Owner only)
+
+**Warehouse Controller (Employee - F216):**
+- `GET /api/employee/warehouses` - List warehouses (Employee only, read-only) - Check warehouse before creating invoice
+- `GET /api/employee/warehouses/<id>` - Get warehouse by id (Employee only, read-only)
 
 ---
 

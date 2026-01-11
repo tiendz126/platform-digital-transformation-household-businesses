@@ -120,6 +120,7 @@ def seed_functions():
         {'function_code': 'F203', 'function_name': 'view_inventory', 'url_pattern': '/api/employee/inventory', 'http_methods': 'R', 'description': 'View inventory (read-only)', 'resource_type': 'Inventory'},
         {'function_code': 'F204', 'function_name': 'view_units', 'url_pattern': '/api/employee/units', 'http_methods': 'R', 'description': 'View units (read-only)', 'resource_type': 'Unit'},
         {'function_code': 'F205', 'function_name': 'view_customers', 'url_pattern': '/api/employee/customers', 'http_methods': 'R', 'description': 'View customers (read-only)', 'resource_type': 'Customer'},
+        {'function_code': 'F216', 'function_name': 'view_warehouses', 'url_pattern': '/api/employee/warehouses', 'http_methods': 'R', 'description': 'View warehouses (read-only) - Check warehouse before creating invoice', 'resource_type': 'Warehouse'},
         {'function_code': 'F206', 'function_name': 'view_customer_debt', 'url_pattern': '/api/employee/customers/*/debt', 'http_methods': 'R', 'description': 'View customer debt', 'resource_type': 'DebtRecord'},
         {'function_code': 'F207', 'function_name': 'create_sales_invoice', 'url_pattern': '/api/employee/invoices', 'http_methods': 'C,R', 'description': 'Create sales invoice', 'resource_type': 'Invoice'},
         {'function_code': 'F208', 'function_name': 'view_own_invoices', 'url_pattern': '/api/employee/invoices', 'http_methods': 'R', 'description': 'View own invoices', 'resource_type': 'Invoice'},
@@ -171,7 +172,7 @@ def seed_role_functions():
     owner_functions = ['F101', 'F102', 'F103', 'F104', 'F105', 'F106', 'F107', 'F108', 'F109', 'F110', 'F111', 'F112', 'F113', 'F114', 'F115', 'F116', 'F117', 'F118']
     
     # Employee Functions
-    employee_functions = ['F201', 'F202', 'F203', 'F204', 'F205', 'F206', 'F207', 'F208', 'F209', 'F210', 'F211', 'F212', 'F213', 'F214', 'F215']
+    employee_functions = ['F201', 'F202', 'F203', 'F204', 'F205', 'F206', 'F207', 'F208', 'F209', 'F210', 'F211', 'F212', 'F213', 'F214', 'F215', 'F216']
     
     # Map Admin Functions
     print("  Mapping Admin functions...")
@@ -264,7 +265,7 @@ def main():
         print("- Roles: Admin, Owner, Employee")
         print("- Admin Functions: F002, F003 (R,U - ONLY list and deactivate), F004, F005, F006, F007 (NO F001)")
         print("- Owner Functions: F101-F118 (includes F102 manage_own_household and subscription)")
-        print("- Employee Functions: F201-F215")
+        print("- Employee Functions: F201-F216 (includes F216 view_warehouses)")
         print()
         print("IMPORTANT: Admin does NOT have F001 manage_households.")
         print("           Only Owner has F102 view_own_household (R, U) to manage household and subscription.")

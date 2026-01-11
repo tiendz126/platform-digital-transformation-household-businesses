@@ -35,7 +35,6 @@ def register_routes(app):
     app.register_blueprint(employee_units_bp)
     app.register_blueprint(owner_warehouses_bp)
     app.register_blueprint(employee_warehouses_bp)
-    app.register_blueprint(admin_role_functions_bp)
     app.register_blueprint(admin_subscription_plan_bp)
     app.register_blueprint(admin_subscription_bp)
     

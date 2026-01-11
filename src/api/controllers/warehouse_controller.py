@@ -213,11 +213,11 @@ def owner_delete_warehouse(warehouse_id):
 
 
 # =====================================================
-# EMPLOYEE – F207 (READ ONLY)
+# EMPLOYEE – F216 (READ ONLY)
 # =====================================================
 
 @employee_bp.route("", methods=["GET"])
-@require_permission("F207", ["GET"])
+@require_permission("F216", ["GET"])
 def employee_list_warehouses():
     """
     List warehouses (Employee – read only)
@@ -235,7 +235,7 @@ def employee_list_warehouses():
 
 
 @employee_bp.route("/<int:warehouse_id>", methods=["GET"])
-@require_permission("F207", ["GET"])
+@require_permission("F216", ["GET"])
 def employee_get_warehouse(warehouse_id):
     """
     Get warehouse by id (Employee – read only)
