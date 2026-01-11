@@ -55,7 +55,8 @@ class UserService:
         if is_admin_creating:
             self._check_admin_cannot_manage_employee(role_id=role_id, action="create")
         
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         user = User(
             id=None, household_id=household_id, role_id=role_id, user_name=user_name,
             password=password, email=email, description=description, status=status,
@@ -80,13 +81,21 @@ class UserService:
         
         return user
 
-    def list_users(self, exclude_employee: bool = False) -> List[User]:
+    def list_users(self, exclude_employee: bool = False, role_id: int = None, 
+                   status: str = None, household_id: int = None, search_term: str = None) -> List[User]:
         """
-        List users với business rules
+        List users với business rules và search/filter
+        
+        Business Logic: Admin quản lý Owner accounts - view, search, filter, manage
         
         Args:
             exclude_employee: True nếu Admin list (exclude Employee)
+            role_id: Filter by role_id (e.g., only Owner - để Admin quản lý Owner accounts)
+            status: Filter by status (Active, Inactive) - để activate/deactivate
+            household_id: Filter by household_id
+            search_term: Search by user_name or email (case-insensitive) - để search Owner accounts
         """
+        employee_role = None
         if exclude_employee:
             # Business rule: Admin chỉ quản lý Admin và Owner, KHÔNG Employee
             employee_role = self._get_employee_role()
@@ -94,8 +103,22 @@ class UserService:
                 # Nếu không tìm thấy Employee role, raise error để đảm bảo business rule
                 raise ValueError("Employee role not found in database. Cannot exclude Employee users.")
             
-            # Exclude Employee role - Business rule được enforce
-            return self.repository.list_exclude_role(employee_role.id)
+            # BUSINESS RULE VALIDATION: Admin không được filter Employee role
+            # Nếu Admin cố filter role_id = Employee, thì phải reject vì conflict
+            if role_id is not None and role_id == employee_role.id:
+                raise ValueError(f"Admin cannot filter Employee role (role_id={role_id}). Admin can only manage Admin and Owner accounts. Use role_id=1 (Admin) or role_id=2 (Owner).")
+        
+        # Use search_and_filter if có search_term, filter, hoặc exclude_employee
+        if exclude_employee or role_id or status or household_id or search_term:
+            return self.repository.search_and_filter(
+                exclude_role_id=employee_role.id if employee_role else None,
+                role_id=role_id,
+                status=status,
+                household_id=household_id,
+                search_term=search_term
+            )
+        
+        # Default: list all
         return self.repository.list()
 
     def update_user(self, user_id: int, household_id: int = None, role_id: int = None,
@@ -112,7 +135,8 @@ class UserService:
         if is_admin_updating:
             self._check_admin_cannot_manage_employee(user_id=user_id, role_id=role_id, action="update")
         
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         user = User(
             id=user_id, household_id=household_id, role_id=role_id, user_name=user_name,
             password=password, email=email, description=description, status=status,

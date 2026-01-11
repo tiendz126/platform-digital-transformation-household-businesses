@@ -25,34 +25,41 @@ screens/
 │   └── ForgotPasswordScreen.tsx              # Quên mật khẩu (optional)
 ```
 
-### Registration Flow (Chỉ cho Owner)
+### Registration Flow (Chỉ cho Owner - Public, không cần auth)
 ```
 screens/
 ├── registration/
 │   ├── SubscriptionPlanSelectionScreen.tsx    # Bước 1: Chọn gói đăng ký
-│   │                                         # - Hiển thị danh sách subscription plans
+│   │                                         # - GET /api/public/subscription-plans (Public endpoint)
+│   │                                         # - Hiển thị danh sách subscription plans (active only)
 │   │                                         # - So sánh các gói (Basic, Pro, etc.)
-│   │                                         # - Chọn gói đăng ký
+│   │                                         # - Chọn gói đăng ký (lưu plan_id)
 │   │
 │   ├── HouseholdRegistrationScreen.tsx       # Bước 2: Điền thông tin hộ kinh doanh
-│   │                                         # - Tên hộ kinh doanh (name)
-│   │                                         # - Mã số thuế (tax_code) - CCCD người đại diện
-│   │                                         # - Số điện thoại (phone)
-│   │                                         # - Địa chỉ (address)
-│   │                                         # - Mô tả (description)
-│   │                                         # - Status (default: Active)
+│   │                                         # - Tên hộ kinh doanh (name) - required
+│   │                                         # - Mã số thuế (tax_code) - CCCD người đại diện (optional, unique)
+│   │                                         # - Số điện thoại (phone) - optional
+│   │                                         # - Địa chỉ (address) - optional
+│   │                                         # - Mô tả (description) - optional
+│   │                                         # - Status: Active (auto-assign)
 │   │
 │   ├── OwnerAccountCreationScreen.tsx        # Bước 3: Tạo tài khoản Owner
-│   │                                         # - Username (user_name)
-│   │                                         # - Password (password)
+│   │                                         # - Username (user_name) - required, unique
+│   │                                         # - Password (password) - required
 │   │                                         # - Confirm Password
 │   │                                         # - Email (optional)
-│   │                                         # - Role: Owner (auto-assign)
-│   │                                         # - Household ID (link to household vừa tạo)
-│   │                                         # - Tạo subscription với plan đã chọn
+│   │                                         # - Description (optional)
+│   │                                         # - POST /api/public/register (Public endpoint)
+│   │                                         #   Tạo tất cả trong 1 transaction:
+│   │                                         #   + Tạo Household (từ bước 2)
+│   │                                         #   + Tạo Owner User account (role Owner, link với household)
+│   │                                         #   + Tạo Subscription (với plan_id từ bước 1)
 │   │
 │   └── RegistrationSuccessScreen.tsx         # Đăng ký thành công
-│                                             # - Hiển thị thông tin đã đăng ký
+│                                             # - Hiển thị thông tin đã đăng ký:
+│                                             #   + Household ID
+│                                             #   + User ID
+│                                             #   + Subscription ID
 │                                             # - Button: "Đăng nhập ngay"
 │                                             # - Redirect đến LoginScreen
 ```
@@ -69,17 +76,18 @@ screens/
 │   │   ├── AdminDashboardScreen.tsx          # F004: view_platform_analytics
 │   │   └── PlatformAnalyticsScreen.tsx       # F004: view_platform_analytics
 │   │
-│   ├── households/
-│   │   ├── HouseholdListScreen.tsx           # F001: manage_households (List)
-│   │   ├── HouseholdDetailScreen.tsx         # F001: manage_households (Detail)
-│   │   ├── HouseholdCreateScreen.tsx         # F001: manage_households (Create)
-│   │   └── HouseholdEditScreen.tsx           # F001: manage_households (Update)
-│   │
 │   ├── subscriptions/
-│   │   ├── SubscriptionListScreen.tsx        # F003: manage_subscriptions (List)
-│   │   ├── SubscriptionDetailScreen.tsx      # F003: manage_subscriptions (Detail)
-│   │   ├── SubscriptionCreateScreen.tsx      # F003: manage_subscriptions (Create)
-│   │   └── SubscriptionEditScreen.tsx        # F003: manage_subscriptions (Update)
+│   │   ├── SubscriptionListScreen.tsx        # F003: manage_subscriptions (List all)
+│   │   │                                     # - GET /api/admin/subscriptions
+│   │   │                                     # - Hiển thị tất cả subscriptions (all households)
+│   │   │                                     # - Filter: household_id, plan_id, is_active, date range
+│   │   │                                     # - Action: Deactivate subscription (CHỈ deactivate, không edit plan_id)
+│   │   │
+│   │   └── SubscriptionDeactivateScreen.tsx  # F003: manage_subscriptions (Deactivate only)
+│   │                                         # - PUT /api/admin/subscriptions/<id>
+│   │                                         # - CHỈ được deactivate (is_active=false)
+│   │                                         # - KHÔNG được: Create, Update plan_id, Delete
+│   │                                         # - KHÔNG được: Activate (Owner tự activate khi upgrade)
 │   │
 │   ├── subscription-plans/
 │   │   ├── SubscriptionPlanListScreen.tsx    # F002: manage_subscription_plans (List)
@@ -126,6 +134,28 @@ screens/
 │   ├── household/
 │   │   ├── HouseholdProfileScreen.tsx        # F102: view_own_household (View)
 │   │   └── HouseholdEditScreen.tsx           # F102: view_own_household (Update)
+│   │
+│   ├── subscription/
+│   │   ├── SubscriptionViewScreen.tsx        # F102: view_own_household (View subscription)
+│   │   │                                     # - GET /api/owner/subscription
+│   │   │                                     # - Hiển thị subscription của household mình
+│   │   │                                     # - Thông tin: plan_id, start_date, end_date, is_active
+│   │   │                                     # - Button: "Upgrade Plan" → SubscriptionUpgradeScreen
+│   │   │
+│   │   └── SubscriptionUpgradeScreen.tsx     # F102: view_own_household (Upgrade subscription)
+│   │                                         # - GET /api/owner/subscription-plans (lấy danh sách plans active - F102: R)
+│   │                                         #   * Owner đã login, cần permission check (F102)
+│   │                                         #   * CHỈ trả về plans có status = "active"
+│   │                                         # - Hiển thị danh sách plans:
+│   │                                         #   ├── Plan ID
+│   │                                         #   ├── Plan name
+│   │                                         #   ├── Price
+│   │                                         #   ├── Billing cycle (monthly/yearly)
+│   │                                         #   └── Description
+│   │                                         # - Chọn plan mới (plan_id)
+│   │                                         # - PUT /api/owner/subscription (upgrade plan_id - F102: U)
+│   │                                         # - System tự động: Update plan_id, start_date, end_date (tính từ billing_cycle)
+│   │                                         # - Owner tự upgrade, không cần Admin
 │   │
 │   ├── employees/
 │   │   ├── EmployeeListScreen.tsx            # F101: manage_employees (List)
@@ -355,10 +385,8 @@ components/
 LoginScreen (chung)
   ↓
 AdminDashboardScreen
-  ├── Households
-  │   └── HouseholdListScreen → Detail → Create/Edit
   ├── Subscriptions
-  │   └── SubscriptionListScreen → Detail → Create/Edit
+  │   └── SubscriptionListScreen → Deactivate (CHỈ list và deactivate, KHÔNG create/edit plan_id/delete)
   ├── Subscription Plans
   │   └── SubscriptionPlanListScreen → Detail → Create/Edit
   ├── Users
@@ -390,8 +418,12 @@ OwnerDashboardScreen
   │   └── AccountingLedgerListScreen → Export
   ├── Employees
   │   └── EmployeeListScreen → Create/Edit
+  ├── Subscription
+  │   └── SubscriptionViewScreen → Upgrade (F102: view_own_household - R, U)
+  │       # GET /api/owner/subscription (xem subscription của household mình)
+  │       # PUT /api/owner/subscription (upgrade plan_id - tự upgrade, không cần Admin)
   └── Settings
-      └── HouseholdProfileScreen → Edit
+      └── HouseholdProfileScreen → Edit (F102: view_own_household - R, U)
 ```
 
 ### Employee Navigation
@@ -441,41 +473,51 @@ EmployeeHomeScreen
 1. LandingScreen / WelcomeScreen
    ↓
 2. SubscriptionPlanSelectionScreen (registration/)
-   ├── Hiển thị danh sách subscription plans (từ Admin)
+   ├── GET /api/public/subscription-plans (Public endpoint, không cần auth)
+   ├── Hiển thị danh sách subscription plans (active only)
    ├── So sánh các gói (Basic, Pro, Premium, etc.)
    ├── Chọn gói đăng ký
    └── Lưu plan_id
    ↓
 3. HouseholdRegistrationScreen (registration/)
    ├── Điền thông tin hộ kinh doanh:
-   │   ├── Tên hộ kinh doanh (name)
-   │   ├── Mã số thuế (tax_code) - CCCD người đại diện
-   │   ├── Số điện thoại (phone)
-   │   ├── Địa chỉ (address)
+   │   ├── Tên hộ kinh doanh (name) - required
+   │   ├── Mã số thuế (tax_code) - CCCD người đại diện (optional, unique)
+   │   ├── Số điện thoại (phone) - optional
+   │   ├── Địa chỉ (address) - optional
    │   └── Mô tả (description - optional)
-   ├── Validation: check tax_code unique
-   └── Tạo Household record
+   ├── Validation: check tax_code unique (nếu có)
+   └── Lưu household data (chưa tạo, chờ bước 4)
    ↓
 4. OwnerAccountCreationScreen (registration/)
    ├── Điền thông tin tài khoản:
-   │   ├── Username (user_name) - unique
-   │   ├── Password (password)
+   │   ├── Username (user_name) - required, unique
+   │   ├── Password (password) - required
    │   ├── Confirm Password
-   │   └── Email (optional)
-   ├── Auto-assign:
-   │   ├── Role: Owner
-   │   ├── Household ID: từ bước 3
-   │   └── Status: Active
-   ├── Tạo User record với role Owner
-   └── Tạo Subscription record:
-       ├── plan_id: từ bước 2
-       ├── household_id: từ bước 3
-       ├── start_date: today
-       ├── end_date: start_date + plan duration
-       └── is_active: true
+   │   ├── Email (optional)
+   │   └── Description (optional)
+   ├── POST /api/public/register (Public endpoint, không cần auth)
+   │   Request body:
+   │   {
+   │     "plan_id": <từ bước 2>,
+   │     "household": { <từ bước 3> },
+   │     "owner_account": { <từ form này> }
+   │   }
+   │   └── Tạo tất cả trong 1 transaction:
+   │       ├── Tạo Household record
+   │       ├── Tạo User record với role Owner (link với household)
+   │       └── Tạo Subscription record:
+   │           ├── plan_id: từ bước 2
+   │           ├── household_id: từ household vừa tạo
+   │           ├── start_date: today
+   │           ├── end_date: start_date + plan duration (dựa trên billing_cycle)
+   │           └── is_active: true
    ↓
 5. RegistrationSuccessScreen (registration/)
-   ├── Hiển thị thông tin đã đăng ký
+   ├── Hiển thị thông tin đã đăng ký:
+   │   ├── Household ID
+   │   ├── User ID
+   │   └── Subscription ID
    └── Button: "Đăng nhập ngay"
    ↓
 6. LoginScreen (auth/) - chung cho tất cả roles
@@ -486,6 +528,7 @@ EmployeeHomeScreen
        └── Employee → EmployeeHomeScreen
    ↓
 7. OwnerDashboardScreen
+   └── Owner có thể quản lý household của mình qua F102: view_own_household (R, U)
 ```
 
 ### Flow 1: Employee tạo đơn bán hàng
@@ -527,6 +570,45 @@ EmployeeHomeScreen
    └── Auto update accounting ledger
 ```
 
+### Flow 2.5: Owner upgrade subscription plan
+```
+1. OwnerDashboardScreen
+   ↓
+2. SubscriptionViewScreen (owner/subscription/)
+   ├── GET /api/owner/subscription (F102: R)
+   ├── Hiển thị subscription hiện tại:
+   │   ├── Plan ID hiện tại
+   │   ├── Plan name hiện tại
+   │   ├── Start date
+   │   ├── End date
+   │   └── Status (is_active)
+   ├── Button: "Upgrade Plan" → SubscriptionUpgradeScreen
+   └── Button: "View Household" → HouseholdProfileScreen
+   ↓
+3. SubscriptionUpgradeScreen (owner/subscription/)
+   ├── GET /api/owner/subscription-plans (F102: R - Owner đã login, có permission check)
+   ├── Hiển thị danh sách plans:
+   │   ├── Plan ID
+   │   ├── Plan name
+   │   ├── Price
+   │   ├── Billing cycle (monthly/yearly)
+   │   └── Description
+   ├── Chọn plan mới (plan_id)
+   ├── PUT /api/owner/subscription
+   │   Request body:
+   │   {
+   │     "plan_id": <plan_id mới>
+   │   }
+   │   └── System tự động:
+   │       ├── Update plan_id
+   │       ├── Update start_date (default: today)
+   │       └── Update end_date (tính từ billing_cycle của plan mới)
+   └── Success message: "Upgrade thành công"
+   ↓
+4. SubscriptionViewScreen (refresh)
+   └── Hiển thị subscription mới với plan_id mới
+```
+
 ### Flow 3: Owner xem báo cáo
 ```
 1. OwnerDashboardScreen
@@ -563,11 +645,24 @@ EmployeeHomeScreen
 
 ## 📝 NOTES
 
-1. **Owner Registration Flow** - Flow đăng ký Owner gồm 3 bước:
-   - Bước 1: Chọn Subscription Plan (lấy từ danh sách plans do Admin quản lý)
-   - Bước 2: Điền thông tin Household (tạo household record)
-   - Bước 3: Tạo Owner account (tạo user với role Owner, link với household, tạo subscription)
+1. **Owner Registration Flow** - Flow đăng ký Owner gồm 3 bước (Public, không cần auth):
+   - Bước 1: Chọn Subscription Plan (GET /api/public/subscription-plans - lấy danh sách active plans)
+   - Bước 2: Điền thông tin Household (name, tax_code, phone, address, description)
+   - Bước 3: Tạo Owner account (POST /api/public/register - tạo tất cả trong 1 transaction:
+     * Tạo Household
+     * Tạo Owner User account (role Owner, link với household)
+     * Tạo Subscription với plan đã chọn
    - Sau khi đăng ký thành công, tự động redirect đến LoginScreen
+
+2. **Admin KHÔNG có quyền quản lý Household** - F001 manage_households đã bị xóa khỏi Admin functions.
+   - Admin chỉ quản lý: Subscription Plans (F002), Subscriptions (F003 - CHỈ list và deactivate), Users (F005), Analytics (F004), System Config (F006), Accounting Ledgers (F007)
+   - Chỉ Owner có quyền quản lý Household của chính mình qua F102: view_own_household (R, U)
+   
+3. **Admin quản lý Subscription (F003)** - CHỈ được list all subscriptions và deactivate:
+   - GET /api/admin/subscriptions - List all subscriptions (CHỈ list, không create)
+   - PUT /api/admin/subscriptions/<id> - Deactivate subscription (CHỈ deactivate is_active=false, KHÔNG được update plan_id)
+   - **KHÔNG được**: Create subscription (Owner tự đăng ký), Update plan_id (Owner tự upgrade), Delete subscription, Activate subscription
+   - Owner tự quản lý subscription: GET /api/owner/subscription (xem), PUT /api/owner/subscription (upgrade plan_id)
 
 2. **Owner có tất cả chức năng của Employee** - Owner có thể tạo order, confirm invoice, etc.
 
