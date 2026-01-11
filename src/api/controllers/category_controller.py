@@ -3,15 +3,15 @@ from services.category_service import CategoryService
 from infrastructure.repositories.category_repository import CategoryRepository
 from api.decorators.auth_decorators import require_permission
 
-# ================= OWNER – F103 =================
+# =====================================================
+# BLUEPRINTS
+# =====================================================
 
 owner_bp = Blueprint(
     "owner_categories",
     __name__,
     url_prefix="/api/owner/categories"
 )
-
-# ================= EMPLOYEE – F202 =================
 
 employee_bp = Blueprint(
     "employee_categories",
@@ -21,8 +21,31 @@ employee_bp = Blueprint(
 
 category_service = CategoryService(CategoryRepository())
 
+
 # =====================================================
-# OWNER
+# HELPER
+# =====================================================
+
+def category_to_dict(c):
+    return {
+        "id": c.id,
+        "household_id": c.household_id,
+        "name": c.name,
+        "description": c.description,
+        "status": c.status,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "updated_at": c.updated_at.isoformat() if c.updated_at else None
+    }
+
+def get_json_or_415():
+    if not request.is_json:
+        return None, (jsonify({
+            "error": "Content-Type must be application/json"
+        }), 415)
+
+    return request.get_json(), None
+# =====================================================
+# OWNER – F103
 # =====================================================
 
 @owner_bp.route("", methods=["GET"])
@@ -39,8 +62,8 @@ def owner_list_categories():
         200:
           description: List of categories
     """
-    return jsonify(category_service.list_categories(g.household_id)), 200
-
+    categories = category_service.list_categories(g.household_id)
+    return jsonify([category_to_dict(c) for c in categories]), 200
 
 @owner_bp.route("", methods=["POST"])
 @require_permission("F103", ["POST"])
@@ -51,27 +74,29 @@ def owner_create_category():
     post:
       summary: Create category
       tags: [Owner Categories]
-      security: [{Bearer: []}]
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required: [name]
-            properties:
-              name:
-                type: string
-              description:
-                type: string
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         201:
           description: Category created
     """
-    data = request.get_json()
+    data = request.get_json()   
 
     category = category_service.create_category(
         household_id=g.household_id,
@@ -79,7 +104,9 @@ def owner_create_category():
         description=data.get("description"),
         status=data.get("status", "ACTIVE")
     )
-    return jsonify(category), 201
+
+    return jsonify(category_to_dict(category)), 201
+
 
 
 @owner_bp.route("/<int:category_id>", methods=["GET"])
@@ -106,7 +133,8 @@ def owner_get_category(category_id):
     category = category_service.get_category(category_id, g.household_id)
     if not category:
         return jsonify({"error": "Category not found"}), 404
-    return jsonify(category), 200
+
+    return jsonify(category_to_dict(category)), 200
 
 
 @owner_bp.route("/<int:category_id>", methods=["PUT"])
@@ -118,25 +146,33 @@ def owner_update_category(category_id):
     put:
       summary: Update category
       tags: [Owner Categories]
-      security: [{Bearer: []}]
+      security:
+        - Bearer: []
       parameters:
         - name: category_id
           in: path
           required: true
-          type: integer
-        - in: body
-          name: body
           schema:
-            type: object
-            properties:
-              name: {type: string}
-              description: {type: string}
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         200:
           description: Updated
+        404:
+          description: Not found
     """
     data = request.get_json()
 
@@ -147,7 +183,11 @@ def owner_update_category(category_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(category), 200
+
+    if not category:
+        return jsonify({"error": "Category not found"}), 404
+
+    return jsonify(category_to_dict(category)), 200
 
 
 @owner_bp.route("/<int:category_id>", methods=["DELETE"])
@@ -174,7 +214,7 @@ def owner_delete_category(category_id):
 
 
 # =====================================================
-# EMPLOYEE – READ ONLY
+# EMPLOYEE – F202 (READ ONLY)
 # =====================================================
 
 @employee_bp.route("", methods=["GET"])
@@ -191,4 +231,5 @@ def employee_list_categories():
         200:
           description: List of categories
     """
-    return jsonify(category_service.list_categories(g.household_id)), 200
+    categories = category_service.list_categories(g.household_id)
+    return jsonify([category_to_dict(c) for c in categories]), 200

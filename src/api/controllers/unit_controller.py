@@ -21,6 +21,19 @@ employee_bp = Blueprint(
 
 unit_service = UnitService(UnitRepository())
 
+# ================= HELPER =================
+
+def unit_to_dict(u):
+    return {
+        "id": u.id,
+        "household_id": u.household_id,
+        "name": u.name,
+        "description": u.description,
+        "status": u.status,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+        "updated_at": u.updated_at.isoformat() if u.updated_at else None,
+    }
+
 # =====================================================
 # OWNER
 # =====================================================
@@ -40,36 +53,37 @@ def owner_list_units():
         200:
           description: List of units
     """
-    return jsonify(unit_service.list_units(g.household_id)), 200
+    units = unit_service.list_units(g.household_id)
+    return jsonify([unit_to_dict(u) for u in units]), 200
 
 
 @owner_bp.route("", methods=["POST"])
 @require_permission("F105", ["POST"])
 def owner_create_unit():
     """
-    Create unit (Owner only)
+    Create unit (Owner)
     ---
     post:
       summary: Create unit
       tags: [Owner Units]
       security:
         - Bearer: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - name
-            properties:
-              name:
-                type: string
-              description:
-                type: string
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         201:
           description: Unit created
@@ -82,7 +96,7 @@ def owner_create_unit():
         description=data.get("description"),
         status=data.get("status", "ACTIVE")
     )
-    return jsonify(unit), 201
+    return jsonify(unit_to_dict(unit)), 201
 
 
 @owner_bp.route("/<int:unit_id>", methods=["GET"])
@@ -110,14 +124,15 @@ def owner_get_unit(unit_id):
     unit = unit_service.get_unit(unit_id, g.household_id)
     if not unit:
         return jsonify({"error": "Unit not found"}), 404
-    return jsonify(unit), 200
+
+    return jsonify(unit_to_dict(unit)), 200
 
 
 @owner_bp.route("/<int:unit_id>", methods=["PUT"])
 @require_permission("F105", ["PUT"])
 def owner_update_unit(unit_id):
     """
-    Update unit (Owner only)
+    Update unit (Owner)
     ---
     put:
       summary: Update unit
@@ -128,22 +143,27 @@ def owner_update_unit(unit_id):
         - name: unit_id
           in: path
           required: true
-          type: integer
-        - in: body
-          name: body
           schema:
-            type: object
-            properties:
-              name:
-                type: string
-              description:
-                type: string
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         200:
           description: Unit updated
+        404:
+          description: Not found
     """
     data = request.get_json()
 
@@ -154,7 +174,7 @@ def owner_update_unit(unit_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(unit), 200
+    return jsonify(unit_to_dict(unit)), 200
 
 
 @owner_bp.route("/<int:unit_id>", methods=["DELETE"])
@@ -200,7 +220,8 @@ def employee_list_units():
         200:
           description: List of units
     """
-    return jsonify(unit_service.list_units(g.household_id)), 200
+    units = unit_service.list_units(g.household_id)
+    return jsonify([unit_to_dict(u) for u in units]), 200
 
 
 @employee_bp.route("/<int:unit_id>", methods=["GET"])
@@ -228,4 +249,5 @@ def employee_get_unit(unit_id):
     unit = unit_service.get_unit(unit_id, g.household_id)
     if not unit:
         return jsonify({"error": "Unit not found"}), 404
-    return jsonify(unit), 200
+
+    return jsonify(unit_to_dict(unit)), 200

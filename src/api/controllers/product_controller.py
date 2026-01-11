@@ -3,15 +3,15 @@ from services.product_service import ProductService
 from infrastructure.repositories.product_repository import ProductRepository
 from api.decorators.auth_decorators import require_permission
 
-# ================= OWNER – F104 =================
+# =====================================================
+# BLUEPRINTS
+# =====================================================
 
 owner_bp = Blueprint(
     "owner_products",
     __name__,
     url_prefix="/api/owner/products"
 )
-
-# ================= EMPLOYEE – F201 (READ ONLY) =================
 
 employee_bp = Blueprint(
     "employee_products",
@@ -21,8 +21,27 @@ employee_bp = Blueprint(
 
 product_service = ProductService(ProductRepository())
 
+
 # =====================================================
-# OWNER
+# HELPER
+# =====================================================
+
+def product_to_dict(p):
+    return {
+        "id": p.id,
+        "household_id": p.household_id,
+        "category_id": p.category_id,
+        "name": p.name,
+        "image_url": p.image_url,
+        "description": p.description,
+        "status": p.status,
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+        "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+    }
+
+
+# =====================================================
+# OWNER – F104
 # =====================================================
 
 @owner_bp.route("", methods=["GET"])
@@ -39,7 +58,8 @@ def owner_list_products():
         200:
           description: List of products
     """
-    return jsonify(product_service.list_products(g.household_id)), 200
+    products = product_service.list_products(g.household_id)
+    return jsonify([product_to_dict(p) for p in products]), 200
 
 
 @owner_bp.route("", methods=["POST"])
@@ -52,27 +72,27 @@ def owner_create_product():
       summary: Create product
       tags: [Owner Products]
       security: [{Bearer: []}]
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - category_id
-              - name
-            properties:
-              category_id:
-                type: integer
-              name:
-                type: string
-              image_url:
-                type: string
-              description:
-                type: string
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_id
+                - name
+              properties:
+                category_id:
+                  type: integer
+                name:
+                  type: string
+                image_url:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         201:
           description: Product created
@@ -87,7 +107,8 @@ def owner_create_product():
         description=data.get("description"),
         status=data.get("status", "ACTIVE")
     )
-    return jsonify(product), 201
+
+    return jsonify(product_to_dict(product)), 201
 
 
 @owner_bp.route("/<int:product_id>", methods=["GET"])
@@ -114,7 +135,8 @@ def owner_get_product(product_id):
     product = product_service.get_product(product_id, g.household_id)
     if not product:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify(product), 200
+
+    return jsonify(product_to_dict(product)), 200
 
 
 @owner_bp.route("/<int:product_id>", methods=["PUT"])
@@ -126,31 +148,37 @@ def owner_update_product(product_id):
     put:
       summary: Update product
       tags: [Owner Products]
-      security: [{Bearer: []}]
+      security:
+        - Bearer: []
       parameters:
         - name: product_id
           in: path
           required: true
-          type: integer
-        - in: body
-          name: body
           schema:
-            type: object
-            properties:
-              category_id:
-                type: integer
-              name:
-                type: string
-              image_url:
-                type: string
-              description:
-                type: string
-              status:
-                type: string
-                enum: [ACTIVE, INACTIVE]
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_id:
+                  type: integer
+                name:
+                  type: string
+                image_url:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
       responses:
         200:
           description: Product updated
+        404:
+          description: Not found
     """
     data = request.get_json()
 
@@ -163,7 +191,8 @@ def owner_update_product(product_id):
         description=data.get("description"),
         status=data.get("status")
     )
-    return jsonify(product), 200
+
+    return jsonify(product_to_dict(product)), 200
 
 
 @owner_bp.route("/<int:product_id>", methods=["DELETE"])
@@ -190,7 +219,7 @@ def owner_delete_product(product_id):
 
 
 # =====================================================
-# EMPLOYEE – READ ONLY
+# EMPLOYEE – F201 (READ ONLY)
 # =====================================================
 
 @employee_bp.route("", methods=["GET"])
@@ -207,7 +236,8 @@ def employee_list_products():
         200:
           description: List of products
     """
-    return jsonify(product_service.list_products(g.household_id)), 200
+    products = product_service.list_products(g.household_id)
+    return jsonify([product_to_dict(p) for p in products]), 200
 
 
 @employee_bp.route("/<int:product_id>", methods=["GET"])
@@ -234,5 +264,5 @@ def employee_get_product(product_id):
     product = product_service.get_product(product_id, g.household_id)
     if not product:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify(product), 200
 
+    return jsonify(product_to_dict(product)), 200

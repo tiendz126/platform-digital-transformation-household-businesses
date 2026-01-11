@@ -13,7 +13,7 @@ class UnitRepository(IUnitRepository):
             unit_model = UnitModel(
                 household_id=unit.household_id,
                 name=unit.name,
-                abbreviation=unit.abbreviation,
+                description=unit.description,
                 status=unit.status,
                 created_at=unit.created_at,
                 updated_at=unit.updated_at
